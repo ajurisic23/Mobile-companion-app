@@ -168,17 +168,64 @@ flutter doctor
 
 ## 6. Struktura projekta
 
-Osnovni direktoriji Flutter projekta:
+Flutter projekt organiziran je prema funkcionalnim cjelinama kako bi se omogućio pregledan razvoj, jednostavnije održavanje i lakša suradnja članova tima.
+
+Osnovna struktura projekta:
 
 ```text
 mobile_companion_app/
-├── android/          # Konfiguracija Android aplikacije
-├── ios/              # Konfiguracija iOS aplikacije
-├── lib/              # Izvorni Dart/Flutter kod
-│   └── main.dart     # Ulazna točka aplikacije
-├── test/             # Automatizirani testovi
-├── pubspec.yaml      # Ovisnosti i konfiguracija projekta
-└── README.md         # Upute za instalaciju i pokretanje
+├── android/                     # Konfiguracija Android aplikacije
+├── ios/                         # Konfiguracija iOS aplikacije
+├── lib/                         # Izvorni Dart/Flutter kod
+│   ├── main.dart                # Ulazna točka aplikacije
+│   ├── app/                     # Konfiguracija aplikacije
+│   ├── core/                    # Zajedničke komponente
+│   │   ├── network/             # Zajednička mrežna komunikacija
+│   │   ├── theme/               # Tema i stilovi aplikacije
+│   │   └── widgets/             # Zajedničke UI komponente
+│   └── features/                # Funkcionalne cjeline aplikacije
+│       ├── dashboard/
+│       │   └── screens/         # Ekrani nadzorne ploče
+│       └── gateway/
+│           ├── models/          # Modeli podataka gatewaya
+│           ├── screens/         # Ekrani povezivanja s gatewayem
+│           └── services/        # Servisi za komunikaciju s gatewayem
+├── test/                        # Automatizirani testovi
+├── pubspec.yaml                 # Ovisnosti i konfiguracija projekta
+├── pubspec.lock                 # Zaključane verzije ovisnosti
+└── README.md                    # Dokumentacija projekta
 ```
 
-Detaljnija organizacija direktorija unutar lib/ razvija se u sklopu zadatka SCRUM-8 te će biti dokumentirana nakon dovršetka tog zadatka.
+### 6.1. Organizacija direktorija unutar `lib/`
+
+- **`app/`** – predviđen za konfiguraciju aplikacije i povezivanje njezinih glavnih dijelova.
+- **`core/network/`** – predviđen za zajedničke mrežne komponente.
+- **`core/theme/`** – predviđen za definiranje teme, boja i stilova.
+- **`core/widgets/`** – predviđen za UI komponente koje se koriste na više ekrana.
+- **`features/dashboard/screens/`** – predviđen za ekrane nadzorne ploče s podacima o CAN signalima.
+- **`features/gateway/models/`** – predviđen za modele podataka povezane s CAN gatewayem.
+- **`features/gateway/screens/`** – predviđen za ekrane povezivanja i upravljanja gatewayem.
+- **`features/gateway/services/`** – predviđen za servise koji komuniciraju s gatewayem.
+
+Direktoriji su trenutačno pripremljeni za buduću implementaciju i sadrže `.gitkeep` datoteke kako bi ih Git mogao pratiti.
+
+### 6.2. Osnovne ovisnosti
+
+U datoteci `pubspec.yaml` dodane su sljedeće ovisnosti:
+
+- **`http`** – za REST komunikaciju s CAN gatewayem.
+- **`provider`** – za upravljanje stanjem aplikacije.
+
+Za osnovnu navigaciju između ekrana planirano je korištenje Flutterova ugrađenog mehanizma `Navigator`, bez dodatnog paketa.
+
+Ostale ovisnosti dodavat će se prema potrebama pojedinih funkcionalnosti tijekom daljnjeg razvoja.
+
+### 6.3. Provjera projekta
+
+Nakon postavljanja strukture i dodavanja ovisnosti uspješno su provedene sljedeće provjere:
+
+- `flutter analyze` – statička analiza bez pronađenih problema.
+- `flutter test` – svi postojeći testovi uspješno su prošli.
+- `flutter build apk --debug` – uspješno izrađena Android aplikacija.
+
+Izgradnja iOS aplikacije nije provjerena jer je za nju potrebno razvojno okruženje macOS s Xcodeom.
