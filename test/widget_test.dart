@@ -1,30 +1,54 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:mobile_companion_app/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Main navigation works correctly', (tester) async {
+    // Launch the application.
+    await tester.pumpWidget(const MobileCompanionApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify that Gateway is the initial screen.
+    expect(find.text('Gateway'), findsWidgets);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Navigate to the Dashboard screen.
+    await tester.tap(find.byIcon(Icons.dashboard_outlined));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Dashboard'), findsWidgets);
+
+    // Navigate to the Alerts screen.
+    await tester.tap(find.byIcon(Icons.warning_amber_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Alerts'), findsWidgets);
   });
+
+
+  testWidgets('Back navigation returns to previous tab', (tester) async {
+    // Launch the application.
+    await tester.pumpWidget(const MobileCompanionApp());
+
+    // Navigate from Gateway to Dashboard.
+    await tester.tap(find.byIcon(Icons.dashboard_outlined));
+    await tester.pumpAndSettle();
+
+    // Navigate from Dashboard to Alerts.
+    await tester.tap(find.byIcon(Icons.warning_amber_outlined));
+    await tester.pumpAndSettle();
+
+    // Verify that Alerts is selected.
+    expect(find.text('Alerts'), findsWidgets);
+
+    // Simulate the Android Back button.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    // Verify that navigation returns to Dashboard.
+    final navigationBar = tester.widget<NavigationBar>(
+      find.byType(NavigationBar),
+    );
+    expect(navigationBar.selectedIndex, 1);
+  });
+
 }
