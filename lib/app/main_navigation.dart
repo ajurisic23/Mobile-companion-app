@@ -1,5 +1,7 @@
 
 import 'package:flutter/material.dart';
+import 'screen_placeholder.dart';
+import 'navigation_tab.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -13,12 +15,6 @@ class _MainNavigationState extends State<MainNavigation> {
 
   final List<int> _navigationHistory = [];
 
-  final List<String> _screenTitles = [
-    'Gateway',
-    'Dashboard',
-    'Settings',
-    'Alerts',
-  ];
 
   void _selectScreen(int index) {
     if (index == _selectedIndex) return;
@@ -48,6 +44,7 @@ class _MainNavigationState extends State<MainNavigation> {
       },
       child: Scaffold(
 
+
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
           centerTitle: false,
@@ -55,17 +52,12 @@ class _MainNavigationState extends State<MainNavigation> {
           title: Row(
             children: [
               Icon(
-                [
-                  Icons.cable,
-                  Icons.dashboard_outlined,
-                  Icons.settings_outlined,
-                  Icons.warning_amber_outlined,
-                ][_selectedIndex],
+                NavigationTab.values[_selectedIndex].icon,
                 size: 24,
               ),
               const SizedBox(width: 12),
               Text(
-                _screenTitles[_selectedIndex],
+                NavigationTab.values[_selectedIndex].title,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -75,34 +67,24 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
         ),
 
-        body: Center(
-          child: Text(
-            _screenTitles[_selectedIndex],
-            style: const TextStyle(fontSize: 24),
-          ),
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: NavigationTab.values.map((tab) {
+            return ScreenPlaceholder(title: tab.title);
+          }).toList(),
         ),
+
         bottomNavigationBar: NavigationBar(
           selectedIndex: _selectedIndex,
           onDestinationSelected: _selectScreen,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.cable),
-              label: 'Gateway',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined),
-              label: 'Dashboard',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.settings_outlined),
-              label: 'Settings',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.warning_amber_outlined),
-              label: 'Alerts',
-            ),
-          ],
+          destinations: NavigationTab.values.map((tab) {
+            return NavigationDestination(
+              icon: Icon(tab.icon),
+              label: tab.title,
+            );
+          }).toList(),
         ),
+
       ),
     );
   }
