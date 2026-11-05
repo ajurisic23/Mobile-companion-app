@@ -26,4 +26,37 @@ void main() {
 
     expect(result, isTrue);
   });
+
+
+  test('Returns false when gateway is unreachable', () async {
+    final client = MockClient((request) async {
+      throw Exception('Connection failed');
+    });
+
+    final service = GatewayHealthService(client: client);
+
+    final result = await service.checkHealth(
+      address: '192.168.1.10',
+      port: 8080,
+    );
+
+    expect(result, isFalse);
+  });
+
+
+  test('Returns false when gateway is unreachable', () async {
+    final client = MockClient((request) async {
+      throw Exception('Connection failed');
+    });
+
+    final service = GatewayHealthService(client: client);
+
+    final result = await service.checkHealth(
+      address: '192.168.1.10',
+      port: 8080,
+    );
+
+    expect(result, isFalse);
+  });
+
 }
