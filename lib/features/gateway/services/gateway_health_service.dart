@@ -1,5 +1,16 @@
 
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:http/http.dart' as http;
+
+enum GatewayHealthStatus {
+  available,
+  unavailable,
+  timeout,
+  networkError,
+}
 
 class GatewayHealthService {
   final http.Client client;
@@ -7,7 +18,7 @@ class GatewayHealthService {
   GatewayHealthService({http.Client? client})
       : client = client ?? http.Client();
 
-  Future<bool> checkHealth({
+  Future<GatewayHealthStatus> checkHealth({
     required String address,
     required int port,
   }) async {
@@ -23,10 +34,26 @@ class GatewayHealthService {
         const Duration(seconds: 5),
       );
 
-      return response.statusCode >= 200 &&
-          response.statusCode < 300;
-    } catch (_) {
-      return false;
+      if (response.statusCode < 200 ||
+          response.statusCode >= 300) {
+        return GatewayHealthStatus.unavailable;
+      }
+
+      final dynamic data = jsonDecode(response.body);
+
+      if (data is Map && data['status'] == 'ok') {
+        return GatewayHealthStatus.available;
+      }
+
+      return GatewayHealthStatus.unavailable;
+    } on TimeoutException {
+      return GatewayHealthStatus.timeout;
+    } on SocketException {
+      return GatewayHealthStatus.networkError;
+    } on http.ClientException {
+      return GatewayHealthStatus.networkError;
+    } on FormatException {
+      return GatewayHealthStatus.unavailable;
     }
   }
 }
