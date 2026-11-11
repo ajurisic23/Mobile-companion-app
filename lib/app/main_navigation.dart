@@ -4,6 +4,7 @@ import 'screen_placeholder.dart';
 import 'navigation_tab.dart';
 import '../features/gateway/models/gateway_info.dart';
 import '../features/gateway/screens/connection_screen.dart';
+import '../features/gateway/services/gateway_connection_service.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -16,6 +17,7 @@ class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
   final List<int> _navigationHistory = [];
+  final _connectionService = GatewayConnectionService();
 
   // Privremeno: simulacija i probni podaci da se vidi cijeli ekran.
   // TODO: zamijeniti pravim servisom i spremljenim gatewayima.
@@ -30,8 +32,9 @@ class _MainNavigationState extends State<MainNavigation> {
 
   Widget _buildScreen(NavigationTab tab) => switch (tab) {
     NavigationTab.gateway => ConnectionScreen(
-      onConnect: (host, port) => _simulateConnect(),
-      onConnectSaved: (gateway) => _simulateConnect(),
+      onConnect: _connectionService.connect,
+      onConnectSaved: (gateway) =>
+          _connectionService.connect(gateway.host, gateway.port.toString()),
       onUseSimulated: _simulateConnect,
       savedGateways: _sampleGateways,
     ),

@@ -35,6 +35,7 @@ class AppTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
+        errorMaxLines: 3,
         border: const OutlineInputBorder(),
       ),
     );
