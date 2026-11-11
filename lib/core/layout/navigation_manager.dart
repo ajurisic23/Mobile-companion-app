@@ -20,7 +20,7 @@ class _NavigationManagerState extends State<NavigationManager> {
     final List<Widget> screens = [
       const MainNavigation(),
       // ovdje dodajte ostatak ekrana kada se zavrse
-      const Center(child: Text('Settings Dashboard')),
+      const Center(child: Text('Dashboard')),
       const Center(child: Text('Settings Ekran')),
       const Center(child: Text('Alerts Ekran')),
     ];
