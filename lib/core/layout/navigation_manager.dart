@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_companion_app/app/main_navigation.dart';
+import 'package:mobile_companion_app/features/settings/settings_screen.dart';
 import 'main_layout.dart';
 
 class NavigationManager extends StatefulWidget {
@@ -10,18 +11,18 @@ class NavigationManager extends StatefulWidget {
 }
 
 class _NavigationManagerState extends State<NavigationManager> {
-  int _currentIndex = 1;
+  int _currentIndex = 0;
   final List<int> _navigationHistory = [];
 
   final List<String> _titles = ['Gateway', 'Dashboard', 'Settings', 'Alerts'];
 
   @override
   Widget build(BuildContext context) {
+    // Ovdje se samo pozivaju gotovi ekrani iz pojedinih feature-a
     final List<Widget> screens = [
       const MainNavigation(),
-      // ovdje dodajte ostatak ekrana kada se zavrse
       const Center(child: Text('Dashboard')),
-      const Center(child: Text('Settings Ekran')),
+      const SettingsScreen(),
       const Center(child: Text('Alerts Ekran')),
     ];
 

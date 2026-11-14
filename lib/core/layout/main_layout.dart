@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class MainLayout extends StatelessWidget {
   final String title;
+  final IconData? icon;
   final Widget child;
   final int currentIndex;
   final ValueChanged<int> onTabSelected;
@@ -9,6 +10,7 @@ class MainLayout extends StatelessWidget {
   const MainLayout({
     super.key,
     required this.title,
+    this.icon,
     required this.child,
     required this.currentIndex,
     required this.onTabSelected,
@@ -18,14 +20,24 @@ class MainLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+        centerTitle: false,
         titleSpacing: 20,
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        title: Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 24),
+              const SizedBox(width: 12),
+            ],
+            Text(
+              title,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+          ],
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16),
         child: child,
       ),
       bottomNavigationBar: NavigationBar(
