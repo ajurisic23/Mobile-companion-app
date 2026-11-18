@@ -311,5 +311,44 @@ void main() {
 
       expect(messages, isEmpty);
     });
+
+    test('parses a single CAN message from JSON string', () {
+      const rawMessage = '''
+        {
+          "id": 217056000,
+          "category": "known",
+          "group": "ELECTRONIC ENGINE CONTROLLER 2",
+          "timestamp": 1791622364123,
+          "variables": [
+            {
+              "name": "Accelerator pedal position",
+              "tag": "accelerator_pedal_position",
+              "type": "BYTE",
+              "value": "41.6",
+              "unit": "%"
+            }
+          ],
+          "latitude": 0,
+          "longitude": 0,
+          "altitude": 0
+        }
+        ''';
+
+      final message = parser.parseSingleMessage(rawMessage);
+
+      expect(message, isNotNull);
+      expect(message!.id, 217056000);
+      expect(message.variables.length, 1);
+      expect(message.variables.first.name, 'Accelerator pedal position');
+      expect(message.variables.first.value, '41.6');
+    });
+
+    test('returns null for invalid single CAN message JSON', () {
+      const rawMessage = 'this is not valid JSON';
+
+      final message = parser.parseSingleMessage(rawMessage);
+
+      expect(message, isNull);
+    });
   });
 }
