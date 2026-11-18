@@ -22,6 +22,7 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget _buildScreen(NavigationTab tab) {
     return switch (tab) {
       NavigationTab.gateway => const GatewayScreen(),
+
       _ => ScreenPlaceholder(title: tab.title),
     };
   }
