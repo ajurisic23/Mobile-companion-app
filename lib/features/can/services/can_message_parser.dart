@@ -74,4 +74,18 @@ class CanMessageParser {
       return [];
     }
   }
+
+  CanMessage? parseSingleMessage(String rawMessage) {
+    try {
+      final decoded = jsonDecode(rawMessage);
+
+      if (decoded is! Map<String, dynamic>) {
+        return null;
+      }
+
+      return parseMessage(decoded);
+    } on FormatException {
+      return null;
+    }
+  }
 }
