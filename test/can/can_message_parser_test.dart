@@ -350,5 +350,13 @@ void main() {
 
       expect(message, isNull);
     });
+
+    test('returns null when single message JSON is an array', () {
+      const rawMessage = '[]';
+
+      final message = parser.parseSingleMessage(rawMessage);
+
+      expect(message, isNull);
+    });
   });
 }
