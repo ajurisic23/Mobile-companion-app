@@ -153,5 +153,163 @@ void main() {
       expect(messages[0].id, 100);
       expect(messages[1].id, 300);
     });
+    test('returns empty list for empty JSON array', () {
+      const responseBody = '[]';
+
+      final messages = parser.parseMessages(responseBody);
+
+      expect(messages, isEmpty);
+    });
+    test('skips a CAN message without variables field', () {
+      const responseBody = '''
+        [
+          {
+            "id": 217056000,
+            "category": "known",
+            "group": "ELECTRONIC ENGINE CONTROLLER 2",
+            "timestamp": 1791622364123,
+            "latitude": 0,
+            "longitude": 0,
+            "altitude": 0
+          }
+        ]
+        ''';
+
+      final messages = parser.parseMessages(responseBody);
+
+      expect(messages, isEmpty);
+    });
+    test('skips a CAN message with invalid variables item', () {
+      const responseBody = '''
+        [
+          {
+            "id": 217056000,
+            "category": "known",
+            "group": "ELECTRONIC ENGINE CONTROLLER 2",
+            "timestamp": 1791622364123,
+            "variables": [123],
+            "latitude": 0,
+            "longitude": 0,
+            "altitude": 0
+          }
+        ]
+        ''';
+
+      final messages = parser.parseMessages(responseBody);
+
+      expect(messages, isEmpty);
+    });
+    test('parses a CAN message with empty variables list', () {
+      const responseBody = '''
+        [
+          {
+            "id": 217056000,
+            "category": "known",
+            "group": "ELECTRONIC ENGINE CONTROLLER 2",
+            "timestamp": 1791622364123,
+            "variables": [],
+            "latitude": 0,
+            "longitude": 0,
+            "altitude": 0
+          }
+        ]
+        ''';
+
+      final messages = parser.parseMessages(responseBody);
+
+      expect(messages.length, 1);
+      expect(messages.first.variables, isEmpty);
+    });
+    test('parses a CAN message with multiple signals', () {
+      const responseBody = '''
+        [
+          {
+            "id": 217056000,
+            "category": "known",
+            "group": "ELECTRONIC ENGINE CONTROLLER 2",
+            "timestamp": 1791622364123,
+            "variables": [
+              {
+                "name": "Accelerator pedal position",
+                "tag": "accelerator_pedal_position",
+                "type": "BYTE",
+                "value": "41.6",
+                "unit": "%"
+              },
+              {
+                "name": "Engine speed",
+                "tag": "engine_speed",
+                "type": "WORD",
+                "value": "1500",
+                "unit": "rpm"
+              }
+            ],
+            "latitude": 0,
+            "longitude": 0,
+            "altitude": 0
+          }
+        ]
+        ''';
+
+      final messages = parser.parseMessages(responseBody);
+
+      expect(messages.length, 1);
+      expect(messages.first.variables.length, 2);
+
+      expect(messages.first.variables[0].name, 'Accelerator pedal position');
+      expect(messages.first.variables[0].value, '41.6');
+      expect(messages.first.variables[0].unit, '%');
+
+      expect(messages.first.variables[1].name, 'Engine speed');
+      expect(messages.first.variables[1].value, '1500');
+      expect(messages.first.variables[1].unit, 'rpm');
+    });
+    test('skips a CAN message when signal value is missing', () {
+      const responseBody = '''
+        [
+          {
+            "id": 217056000,
+            "category": "known",
+            "group": "ELECTRONIC ENGINE CONTROLLER 2",
+            "timestamp": 1791622364123,
+            "variables": [
+              {
+                "name": "Accelerator pedal position",
+                "tag": "accelerator_pedal_position",
+                "type": "BYTE",
+                "unit": "%"
+              }
+            ],
+            "latitude": 0,
+            "longitude": 0,
+            "altitude": 0
+          }
+        ]
+        ''';
+
+      final messages = parser.parseMessages(responseBody);
+
+      expect(messages, isEmpty);
+    });
+    test('skips a CAN message with invalid timestamp type', () {
+      const responseBody = '''
+        [
+          {
+            "id": 217056000,
+            "category": "known",
+            "group": "ELECTRONIC ENGINE CONTROLLER 2",
+            "timestamp": "invalid",
+            "variables": [],
+            "latitude": 0,
+            "longitude": 0,
+            "altitude": 0
+          }
+        ]
+        ''';
+
+      final messages = parser.parseMessages(responseBody);
+
+      expect(messages, isEmpty);
+    });
   });
 }
