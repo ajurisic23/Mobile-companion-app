@@ -122,7 +122,6 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
         child: ListView(
-          padding: const EdgeInsets.all(24),
           children: [
             Text('Connect to a CAN gateway', style: textTheme.titleLarge),
             const SizedBox(height: 24),
