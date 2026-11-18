@@ -358,5 +358,26 @@ void main() {
 
       expect(message, isNull);
     });
+
+    test('skips a CAN message with invalid GPS coordinates', () {
+      const responseBody = '''
+        [
+          {
+            "id": 217056000,
+            "category": "known",
+            "group": "Engine",
+            "timestamp": 1791622364123,
+            "variables": [],
+            "latitude": "invalid",
+            "longitude": 0,
+            "altitude": 0
+          }
+        ]
+        ''';
+
+      final messages = parser.parseMessages(responseBody);
+
+      expect(messages, isEmpty);
+    });
   });
 }

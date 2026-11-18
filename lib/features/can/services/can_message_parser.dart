@@ -44,6 +44,8 @@ class CanMessageParser {
       );
     } on TypeError {
       return null;
+    } on FormatException {
+      return null;
     }
   }
 
