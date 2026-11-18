@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:mobile_companion_app/features/settings/settings_screen.dart';
+import 'package:mobile_companion_app/features/settings/screens/settings_screen.dart';
 
 import 'main_layout.dart';
 import 'navigation_tab.dart';

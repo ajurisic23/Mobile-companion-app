@@ -19,7 +19,6 @@ class SettingsScreen extends StatelessWidget {
           style: textTheme.bodyMedium?.copyWith(color: Colors.grey),
         ),        const SizedBox(height: 24),
 
-
       ],
     );
   }

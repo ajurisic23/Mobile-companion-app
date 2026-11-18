@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_companion_app/core/widgets/buttons/primary_button.dart';
+import 'package:mobile_companion_app/core/widgets/buttons/secondary_button.dart';
 
 enum DialogType { info, warning, error }
 
@@ -61,21 +63,9 @@ class ConfirmationDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            FilledButton(
-              onPressed: onConfirm ?? () => Navigator.of(context).pop(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(confirmLabel),
-              ),
-            ),
+            PrimaryButton(label: "Save", onPressed: onConfirm ?? () => Navigator.of(context).pop()),
             const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: onCancel ?? () => Navigator.of(context).pop(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(cancelLabel),
-              ),
-            ),
+            SecondaryButton(label: "Cancel", onPressed: onCancel ?? () => Navigator.of(context).pop())
           ],
         ),
       ),
