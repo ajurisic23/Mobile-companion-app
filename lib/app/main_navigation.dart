@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:mobile_companion_app/features/settings/screens/settings_screen.dart';
 
 import 'main_layout.dart';
 import 'navigation_tab.dart';
@@ -22,6 +23,7 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget _buildScreen(NavigationTab tab) {
     return switch (tab) {
       NavigationTab.gateway => const GatewayScreen(),
+      NavigationTab.settings => const SettingsScreen(),
       _ => ScreenPlaceholder(title: tab.title),
     };
   }

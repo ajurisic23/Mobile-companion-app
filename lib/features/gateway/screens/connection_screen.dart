@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/widgets/action_card.dart';
-import '../../../core/widgets/app_text_field.dart';
-import '../../../core/widgets/inline_error.dart';
-import '../../../core/widgets/loading_button.dart';
+import '../../../core/widgets/inputs/app_text_field.dart';
+import '../../../core/widgets/feedback/inline_error.dart';
+import '../../../core/widgets/buttons/loading_button.dart';
 import '../models/connection_failure.dart';
 import '../models/gateway_info.dart';
 import '../services/gateway_health_service.dart';
@@ -122,7 +122,6 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
         child: ListView(
-          padding: const EdgeInsets.all(24),
           children: [
             Text('Connect to a CAN gateway', style: textTheme.titleLarge),
             const SizedBox(height: 24),

@@ -42,7 +42,7 @@ class MainLayout extends StatelessWidget {
         ),
       ),
 
-      body: child,
+      body: Padding(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24), child: child,),
 
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
