@@ -26,12 +26,18 @@ class SettingsSectionCard extends StatelessWidget {
         ),
         subtitle: Text(section.subtitle),
         children: section.settings.map((item) {
-          return ListTile(
-            title: Text(item.label),
-            trailing: Text(
-              item.value,
-              style: TextStyle(color: scheme.onSurfaceVariant),
-            ),
+          return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: TextFormField(
+                initialValue: item.value,
+                decoration: InputDecoration(
+                  labelText: item.label,
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: (newValue) {
+                  //to do: prati se nova vrijednost koju korisnik upise
+                },
+              ),
           );
         }).toList(),
       ),
