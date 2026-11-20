@@ -13,7 +13,6 @@ enum AlertSeverity {
   critical,
 }
 
-// mozda ce i trebati atribut za can, al to cemo da vidimo u kom obliku se vracaju podaci :D
 class AlertRule {
   final String id;
   final String gatewayId;
@@ -61,4 +60,33 @@ class AlertRule {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'gatewayId': gatewayId,
+      'signalName': signalName,
+      'operator': operator.name,
+      'threshold': threshold,
+      'durationMs': durationMs,
+      'hysteresis': hysteresis,
+      'severity': severity.name,
+      'isEnabled': isEnabled,
+    };
+  }
+
+  factory AlertRule.fromJson(Map<String, dynamic> json) {
+    return AlertRule(
+      id: json['id'] as String,
+      gatewayId: json['gatewayId'] as String,
+      signalName: json['signalName'] as String,
+      operator: AlertOperator.values.byName(json['operator'] as String),
+      threshold: (json['threshold'] as num).toDouble(),
+      durationMs: (json['durationMs'] as num?)?.toInt() ?? 0,
+      hysteresis: (json['hysteresis'] as num?)?.toDouble() ?? 0,
+      severity: AlertSeverity.values.byName(
+        (json['severity'] as String?) ?? AlertSeverity.warning.name,
+      ),
+      isEnabled: (json['isEnabled'] as bool?) ?? true,
+    );
+  }
 }
