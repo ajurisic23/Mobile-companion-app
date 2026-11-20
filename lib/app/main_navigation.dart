@@ -24,6 +24,7 @@ class _MainNavigationState extends State<MainNavigation> {
     return switch (tab) {
       NavigationTab.gateway => const GatewayScreen(),
       NavigationTab.settings => const SettingsScreen(),
+
       _ => ScreenPlaceholder(title: tab.title),
     };
   }
