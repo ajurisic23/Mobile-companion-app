@@ -7,11 +7,13 @@ class SavedGatewayTile extends StatelessWidget {
     super.key,
     required this.gateway,
     this.onConnect,
+    this.onDelete,
   });
 
   final GatewayInfo gateway;
 
   final VoidCallback? onConnect;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +27,20 @@ class SavedGatewayTile extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       title: Text(gateway.name),
       subtitle: showAddress ? Text(gateway.address) : null,
-      trailing: IconButton.filledTonal(
-        tooltip: 'Connect',
-        icon: const Icon(Icons.link),
-        onPressed: onConnect,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'Delete',
+            icon: const Icon(Icons.delete_outline),
+            onPressed: onDelete,
+          ),
+          IconButton.filledTonal(
+            tooltip: 'Connect',
+            icon: const Icon(Icons.link),
+            onPressed: onConnect,
+          ),
+        ],
       ),
     );
   }
