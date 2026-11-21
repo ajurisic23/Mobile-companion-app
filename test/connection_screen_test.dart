@@ -295,4 +295,20 @@ void main() {
 
         expect(find.text('Gateway available'), findsNothing);
       });
+
+  testWidgets('shows the address once when the name is the address',
+          (tester) async {
+        await tester.pumpWidget(_wrap(ConnectionScreen(
+          onConnect: (host, port) async {},
+          savedGateways: const [
+            GatewayInfo(
+              name: '192.168.0.100:10000',
+              host: '192.168.0.100',
+              port: 10000,
+            ),
+          ],
+        )));
+
+        expect(find.text('192.168.0.100:10000'), findsOneWidget);
+      });
 }

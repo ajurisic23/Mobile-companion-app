@@ -10,12 +10,13 @@ class SavedGatewayTile extends StatelessWidget {
   });
 
   final GatewayInfo gateway;
-  
+
   final VoidCallback? onConnect;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final showAddress = gateway.name != gateway.address;
 
     return ListTile(
       onTap: onConnect,
@@ -23,7 +24,7 @@ class SavedGatewayTile extends StatelessWidget {
       tileColor: scheme.surfaceContainerLow,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       title: Text(gateway.name),
-      subtitle: Text(gateway.address),
+      subtitle: showAddress ? Text(gateway.address) : null,
       trailing: IconButton.filledTonal(
         tooltip: 'Connect',
         icon: const Icon(Icons.link),
