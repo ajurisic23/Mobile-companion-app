@@ -111,6 +111,18 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
     );
   }
 
+  void _connectToSaved(
+      GatewayInfo gateway,
+      Future<void> Function(GatewayInfo gateway) onConnectSaved,
+      ) {
+    if (_isConnecting) return;
+
+    _hostController.text = gateway.host;
+    _portController.text = gateway.port.toString();
+
+    _runConnecting(() => onConnectSaved(gateway));
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -193,7 +205,7 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                   gateway: gateway,
                   onConnect: (onConnectSaved == null || _isConnecting)
                       ? null
-                      : () => _runConnecting(() => onConnectSaved(gateway)),
+                      : () => _connectToSaved(gateway, onConnectSaved),
                 ),
                 const SizedBox(height: 8),
               ],

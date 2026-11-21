@@ -18,6 +18,7 @@ class SavedGatewayTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return ListTile(
+      onTap: onConnect,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       tileColor: scheme.surfaceContainerLow,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
