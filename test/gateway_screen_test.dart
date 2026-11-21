@@ -188,4 +188,39 @@ void main() {
         expect(service.calls, ['192.168.0.100:10000']);
         expect(repository.gateways, [_saved]);
       });
+
+  testWidgets('deleting a gateway removes it from the repository and the list',
+          (tester) async {
+        final repository = _FakeRepository([_saved]);
+
+        await _pumpScreen(
+          tester,
+          repository: repository,
+          service: _FakeConnectionService(),
+        );
+        await tester.tap(find.byTooltip('Delete'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Delete'));
+        await tester.pumpAndSettle();
+
+        expect(repository.gateways, isEmpty);
+        expect(find.text('Saved gateways'), findsNothing);
+      });
+
+  testWidgets('cancelling the confirmation keeps the gateway', (tester) async {
+    final repository = _FakeRepository([_saved]);
+
+    await _pumpScreen(
+      tester,
+      repository: repository,
+      service: _FakeConnectionService(),
+    );
+    await tester.tap(find.byTooltip('Delete'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(repository.gateways, [_saved]);
+    expect(find.text('Machine 1'), findsOneWidget);
+  });
 }
