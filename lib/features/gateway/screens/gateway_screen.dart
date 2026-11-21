@@ -57,6 +57,16 @@ class _GatewayScreenState extends State<GatewayScreen> {
     return _connectionService.connect(gateway.host, gateway.port.toString());
   }
 
+  Future<void> _deleteGateway(GatewayInfo gateway) async {
+    try {
+      await widget.repository.delete(gateway);
+    } catch (error) {
+      debugPrint('Deleting gateway failed: $error');
+    }
+
+    await _loadSavedGateways();
+  }
+
   Future<void> _saveGateway(GatewayInfo gateway) async {
     if (_savedGateways.any(gateway.hasSameAddressAs)) return;
 
@@ -79,6 +89,7 @@ class _GatewayScreenState extends State<GatewayScreen> {
     return ConnectionScreen(
       onConnect: _connect,
       onConnectSaved: _connectSaved,
+      onDeleteSaved: _deleteGateway,
       onUseSimulated: _simulateConnect,
       savedGateways: _savedGateways,
     );
