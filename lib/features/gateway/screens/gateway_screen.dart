@@ -1,55 +1,86 @@
-
 import 'package:flutter/material.dart';
 
 import '../models/gateway_info.dart';
 import '../services/gateway_connection_service.dart';
+import '../services/gateway_repository.dart';
+import '../services/local_gateway_repository.dart';
 import 'connection_screen.dart';
 
 class GatewayScreen extends StatefulWidget {
-  const GatewayScreen({super.key});
+  const GatewayScreen({
+    super.key,
+    this.repository = const LocalGatewayRepository(),
+    this.connectionService,
+  });
+
+  final GatewayRepository repository;
+  final GatewayConnectionService? connectionService;
 
   @override
   State<GatewayScreen> createState() => _GatewayScreenState();
 }
 
 class _GatewayScreenState extends State<GatewayScreen> {
-  final _connectionService = GatewayConnectionService();
+  late final GatewayConnectionService _connectionService;
+  List<GatewayInfo> _savedGateways = const [];
 
-  static const _sampleGateways = [
-    GatewayInfo(
-      name: 'Machine 1',
-      host: '192.168.0.100',
-      port: 80,
-    ),
-    GatewayInfo(
-      name: 'Machine 2',
-      host: '192.168.0.101',
-      port: 80,
-    ),
-    GatewayInfo(
-      name: 'Machine 3',
-      host: '192.168.0.102',
-      port: 80,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _connectionService = widget.connectionService ?? GatewayConnectionService();
+    _loadSavedGateways();
+  }
+
+  Future<void> _loadSavedGateways() async {
+    final gateways = await widget.repository.getAll();
+    if (!mounted) return;
+    setState(() => _savedGateways = gateways);
+  }
+
+  Future<void> _connect(String host, String port) async {
+    await _connectionService.connect(host, port);
+
+    final portNumber = port.isEmpty
+        ? GatewayConnectionService.defaultPort
+        : int.parse(port);
+
+    await _saveGateway(
+      GatewayInfo(
+        name: '$host:$portNumber',
+        host: host,
+        port: portNumber,
+      ),
+    );
+  }
+
+  Future<void> _connectSaved(GatewayInfo gateway) {
+    return _connectionService.connect(gateway.host, gateway.port.toString());
+  }
+
+  Future<void> _saveGateway(GatewayInfo gateway) async {
+    if (_savedGateways.any(gateway.hasSameAddressAs)) return;
+
+    try {
+      await widget.repository.save(gateway);
+    } catch (error) {
+      debugPrint('Saving gateway failed: $error');
+      return;
+    }
+
+    await _loadSavedGateways();
+  }
 
   Future<void> _simulateConnect() {
-    return Future<void>.delayed(
-      const Duration(seconds: 2),
-    );
+    return Future<void>.delayed(const Duration(seconds: 2));
   }
 
   @override
   Widget build(BuildContext context) {
     return ConnectionScreen(
-      onConnect: _connectionService.connect,
-      onConnectSaved: (gateway) =>
-          _connectionService.connect(
-            gateway.host,
-            gateway.port.toString(),
-          ),
+      onConnect: _connect,
+      onConnectSaved: _connectSaved,
       onUseSimulated: _simulateConnect,
-      savedGateways: _sampleGateways,
+      savedGateways: _savedGateways,
     );
   }
 }
