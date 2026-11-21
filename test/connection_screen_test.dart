@@ -311,4 +311,74 @@ void main() {
 
         expect(find.text('192.168.0.100:10000'), findsOneWidget);
       });
+
+  testWidgets('deleting a saved gateway asks for confirmation first',
+          (tester) async {
+        var deleted = 0;
+        await tester.pumpWidget(_wrap(ConnectionScreen(
+          onConnect: (host, port) async {},
+          onDeleteSaved: (gateway) async => deleted++,
+          savedGateways: const [_first],
+        )));
+
+        await tester.tap(find.byTooltip('Delete'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Delete gateway?'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(Dialog),
+            matching: find.textContaining('192.168.0.100:10000'),
+          ),
+          findsOneWidget,
+        );
+        expect(deleted, 0);
+      });
+
+  testWidgets('cancelling the confirmation keeps the saved gateway',
+          (tester) async {
+        var deleted = 0;
+        await tester.pumpWidget(_wrap(ConnectionScreen(
+          onConnect: (host, port) async {},
+          onDeleteSaved: (gateway) async => deleted++,
+          savedGateways: const [_first],
+        )));
+
+        await tester.tap(find.byTooltip('Delete'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+
+        expect(deleted, 0);
+        expect(find.text('Delete gateway?'), findsNothing);
+      });
+
+  testWidgets('confirming deletes the selected gateway', (tester) async {
+    _useTallScreen(tester);
+    GatewayInfo? deleted;
+    await tester.pumpWidget(_wrap(ConnectionScreen(
+      onConnect: (host, port) async {},
+      onDeleteSaved: (gateway) async => deleted = gateway,
+      savedGateways: const [_first, _second],
+    )));
+
+    await tester.tap(find.byTooltip('Delete').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+
+    expect(deleted, _second);
+  });
+
+  testWidgets('delete does nothing without a handler', (tester) async {
+    await tester.pumpWidget(_wrap(ConnectionScreen(
+      onConnect: (host, port) async {},
+      savedGateways: const [_first],
+    )));
+
+    await tester.tap(find.byTooltip('Delete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Delete gateway?'), findsNothing);
+  });
 }
