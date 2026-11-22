@@ -4,6 +4,8 @@ import 'package:mobile_companion_app/features/gateway/models/gateway_info.dart';
 import 'package:mobile_companion_app/features/gateway/screens/gateway_screen.dart';
 import 'package:mobile_companion_app/features/gateway/services/gateway_connection_service.dart';
 import 'package:mobile_companion_app/features/gateway/services/gateway_repository.dart';
+import 'package:mobile_companion_app/features/gateway/state/active_gateway_controller.dart';
+import 'package:provider/provider.dart';
 
 class _FakeRepository implements GatewayRepository {
   _FakeRepository([List<GatewayInfo> initial = const []])
@@ -56,17 +58,21 @@ Future<void> _pumpScreen(
     WidgetTester tester, {
       required GatewayRepository repository,
       required GatewayConnectionService service,
+      ActiveGatewayController? activeGateway,
     }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 
   await tester.pumpWidget(
-    MaterialApp(
-      home: Scaffold(
-        body: GatewayScreen(
-          repository: repository,
-          connectionService: service,
+    ChangeNotifierProvider<ActiveGatewayController>.value(
+      value: activeGateway ?? ActiveGatewayController(),
+      child: MaterialApp(
+        home: Scaffold(
+          body: GatewayScreen(
+            repository: repository,
+            connectionService: service,
+          ),
         ),
       ),
     ),
@@ -223,4 +229,70 @@ void main() {
     expect(repository.gateways, [_saved]);
     expect(find.text('Machine 1'), findsOneWidget);
   });
+
+  testWidgets('sets the active gateway after connecting', (tester) async {
+    final activeGateway = ActiveGatewayController();
+
+    await _pumpScreen(
+      tester,
+      repository: _FakeRepository(),
+      service: _FakeConnectionService(),
+      activeGateway: activeGateway,
+    );
+    await _connectTo(tester, host: '192.168.0.101', port: '8080');
+
+    expect(
+      activeGateway.gateway,
+      const GatewayInfo(
+        name: '192.168.0.101:8080',
+        host: '192.168.0.101',
+        port: 8080,
+      ),
+    );
+  });
+
+  testWidgets('keeps the saved name of the active gateway', (tester) async {
+    final activeGateway = ActiveGatewayController();
+
+    await _pumpScreen(
+      tester,
+      repository: _FakeRepository([_saved]),
+      service: _FakeConnectionService(),
+      activeGateway: activeGateway,
+    );
+    await _connectTo(tester, host: '192.168.0.100');
+
+    expect(activeGateway.gateway, _saved);
+  });
+
+  testWidgets('sets the active gateway when connecting to a saved one',
+          (tester) async {
+        final activeGateway = ActiveGatewayController();
+
+        await _pumpScreen(
+          tester,
+          repository: _FakeRepository([_saved]),
+          service: _FakeConnectionService(),
+          activeGateway: activeGateway,
+        );
+        await tester.tap(find.text('Machine 1'));
+        await tester.pumpAndSettle();
+
+        expect(activeGateway.gateway, _saved);
+      });
+
+  testWidgets('does not set the active gateway when connecting fails',
+          (tester) async {
+        final activeGateway = ActiveGatewayController();
+
+        await _pumpScreen(
+          tester,
+          repository: _FakeRepository(),
+          service: _FakeConnectionService(error: Exception('boom')),
+          activeGateway: activeGateway,
+        );
+        await _connectTo(tester, host: '192.168.0.200');
+
+        expect(activeGateway.gateway, isNull);
+      });
 }

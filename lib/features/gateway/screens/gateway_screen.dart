@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/gateway_info.dart';
 import '../services/gateway_connection_service.dart';
 import '../services/gateway_repository.dart';
 import '../services/local_gateway_repository.dart';
+import '../state/active_gateway_controller.dart';
 import 'connection_screen.dart';
 
 class GatewayScreen extends StatefulWidget {
@@ -38,23 +40,34 @@ class _GatewayScreenState extends State<GatewayScreen> {
   }
 
   Future<void> _connect(String host, String port) async {
+    final activeGateway = context.read<ActiveGatewayController>();
+
     await _connectionService.connect(host, port);
 
     final portNumber = port.isEmpty
         ? GatewayConnectionService.defaultPort
         : int.parse(port);
-
-    await _saveGateway(
-      GatewayInfo(
-        name: '$host:$portNumber',
-        host: host,
-        port: portNumber,
-      ),
+    final gateway = GatewayInfo(
+      name: '$host:$portNumber',
+      host: host,
+      port: portNumber,
     );
+
+    await _saveGateway(gateway);
+
+    final saved = _savedGateways.firstWhere(
+      gateway.hasSameAddressAs,
+      orElse: () => gateway,
+    );
+    activeGateway.selectGateway(saved);
   }
 
-  Future<void> _connectSaved(GatewayInfo gateway) {
-    return _connectionService.connect(gateway.host, gateway.port.toString());
+  Future<void> _connectSaved(GatewayInfo gateway) async {
+    final activeGateway = context.read<ActiveGatewayController>();
+
+    await _connectionService.connect(gateway.host, gateway.port.toString());
+
+    activeGateway.selectGateway(gateway);
   }
 
   Future<void> _deleteGateway(GatewayInfo gateway) async {
