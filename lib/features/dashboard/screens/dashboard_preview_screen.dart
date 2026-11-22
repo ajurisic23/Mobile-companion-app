@@ -1,30 +1,29 @@
 
 import 'dart:async';
 
-
 import 'package:flutter/material.dart';
-
 import 'package:can_core/can_core.dart';
+
 import '../interfaces/can_signal_source.dart';
-import 'package:can_cards/can_cards.dart';
-import 'package:can_list/can_list.dart';
 
 class DashboardPreviewScreen extends StatefulWidget {
   const DashboardPreviewScreen({
     super.key,
     required this.signalSource,
+    required this.views,
   });
 
   final CanSignalSource signalSource;
+  final List<CanSignalView> views;
 
   @override
   State<DashboardPreviewScreen> createState() =>
       _DashboardPreviewScreenState();
 }
 
-class _DashboardPreviewScreenState extends State<DashboardPreviewScreen> {
-
-  bool _showGrid = true;
+class _DashboardPreviewScreenState
+    extends State<DashboardPreviewScreen> {
+  String? _selectedViewId;
 
   List<SignalDisplayData> _signals = [];
   StreamSubscription<List<SignalDisplayData>>? _subscription;
@@ -78,40 +77,45 @@ class _DashboardPreviewScreenState extends State<DashboardPreviewScreen> {
       );
     }
 
+    if (widget.views.isEmpty) {
+      return const Center(
+        child: Text('Nema dostupnih modula za prikaz signala.'),
+      );
+    }
+
+    final selectedId = _selectedViewId != null &&
+        widget.views.any((view) => view.id == _selectedViewId)
+        ? _selectedViewId!
+        : widget.views.first.id;
+
+    final selectedView = widget.views.firstWhere(
+          (view) => view.id == selectedId,
+    );
 
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment<bool>(
-                value: true,
-                label: Text('Kartice'),
-                icon: Icon(Icons.grid_view),
-              ),
-              ButtonSegment<bool>(
-                value: false,
-                label: Text('Lista'),
-                icon: Icon(Icons.view_list),
-              ),
-            ],
-            selected: {_showGrid},
+          child: SegmentedButton<String>(
+            segments: widget.views.map((view) {
+              return ButtonSegment<String>(
+                value: view.id,
+                label: Text(view.label),
+                icon: Icon(view.icon),
+              );
+            }).toList(),
+            selected: {selectedId},
             onSelectionChanged: (selection) {
               setState(() {
-                _showGrid = selection.first;
+                _selectedViewId = selection.first;
               });
             },
           ),
         ),
         Expanded(
-          child: _showGrid
-              ? CanSignalGrid(signals: _signals)
-              : CanSignalList(signals: _signals),
+          child: selectedView.buildView(_signals),
         ),
       ],
     );
-
   }
-
 }
