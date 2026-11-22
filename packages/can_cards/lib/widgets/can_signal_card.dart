@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-
 import 'package:can_core/can_core.dart';
 
 class CanSignalCard extends StatelessWidget {
@@ -14,6 +13,7 @@ class CanSignalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     final hasUnit =
         signal.unit != null && signal.unit!.trim().isNotEmpty;
 

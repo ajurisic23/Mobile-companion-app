@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'package:can_core/can_core.dart';
 import '../interfaces/can_signal_source.dart';
-import '../widgets/can_signal_grid.dart';
+import 'package:can_cards/can_cards.dart';
 import '../widgets/can_signal_list.dart';
 
 class DashboardPreviewScreen extends StatefulWidget {

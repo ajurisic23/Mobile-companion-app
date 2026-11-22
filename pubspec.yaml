@@ -32,6 +32,8 @@ dependencies:
   shared_preferences: ^2.5.6
   can_core:
     path: packages/can_core
+  can_cards:
+    path: packages/can_cards
 
 dev_dependencies:
   flutter_test:

@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
-
 import 'package:can_core/can_core.dart';
+
 import 'can_signal_card.dart';
 
 class CanSignalGrid extends StatelessWidget {
