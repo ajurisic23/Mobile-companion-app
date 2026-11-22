@@ -34,6 +34,8 @@ dependencies:
     path: packages/can_core
   can_cards:
     path: packages/can_cards
+  can_list:
+    path: packages/can_list
 
 dev_dependencies:
   flutter_test:

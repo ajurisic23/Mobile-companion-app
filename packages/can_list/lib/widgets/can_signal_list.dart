@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-
 import 'package:can_core/can_core.dart';
 
 class CanSignalList extends StatelessWidget {
