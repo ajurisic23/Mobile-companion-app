@@ -7,6 +7,8 @@ import 'navigation_tab.dart';
 import 'screen_placeholder.dart';
 
 import '../features/gateway/screens/gateway_screen.dart';
+import '../features/dashboard/screens/dashboard_preview_screen.dart';
+import '../features/dashboard/mock/mock_can_signal_source.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -23,6 +25,9 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget _buildScreen(NavigationTab tab) {
     return switch (tab) {
       NavigationTab.gateway => const GatewayScreen(),
+      NavigationTab.dashboard => DashboardPreviewScreen(
+        signalSource: MockCanSignalSource(),
+      ),
       NavigationTab.settings => const SettingsScreen(),
 
       _ => ScreenPlaceholder(title: tab.title),
