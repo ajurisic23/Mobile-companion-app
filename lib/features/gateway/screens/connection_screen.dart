@@ -7,6 +7,7 @@ import '../models/connection_failure.dart';
 import '../models/gateway_info.dart';
 import '../services/gateway_health_service.dart';
 import '../validators/gateway_validators.dart';
+import '../widgets/delete_gateway_dialog.dart';
 import '../widgets/gateway_health_status_widget.dart';
 import '../widgets/saved_gateway_tile.dart';
 
@@ -15,6 +16,7 @@ class ConnectionScreen extends StatefulWidget {
     super.key,
     required this.onConnect,
     this.onConnectSaved,
+    this.onDeleteSaved,
     this.onUseSimulated,
     this.savedGateways = const [],
     this.initialHost = '',
@@ -23,6 +25,7 @@ class ConnectionScreen extends StatefulWidget {
 
   final Future<void> Function(String host, String port) onConnect;
   final Future<void> Function(GatewayInfo gateway)? onConnectSaved;
+  final Future<void> Function(GatewayInfo gateway)? onDeleteSaved;
   final Future<void> Function()? onUseSimulated;
   final List<GatewayInfo> savedGateways;
   final String initialHost;
@@ -111,11 +114,36 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
     );
   }
 
+  void _connectToSaved(
+      GatewayInfo gateway,
+      Future<void> Function(GatewayInfo gateway) onConnectSaved,
+      ) {
+    if (_isConnecting) return;
+
+    _hostController.text = gateway.host;
+    _portController.text = gateway.port.toString();
+
+    _runConnecting(() => onConnectSaved(gateway));
+  }
+
+  Future<void> _deleteSaved(
+      GatewayInfo gateway,
+      Future<void> Function(GatewayInfo gateway) onDeleteSaved,
+      ) async {
+    if (_isConnecting) return;
+
+    final confirmed = await confirmDeleteGateway(context, gateway);
+    if (!confirmed || !mounted) return;
+
+    await onDeleteSaved(gateway);
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final onUseSimulated = widget.onUseSimulated;
     final onConnectSaved = widget.onConnectSaved;
+    final onDeleteSaved = widget.onDeleteSaved;
     final errorMessage = _errorMessage;
 
     return Center(
@@ -193,7 +221,10 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                   gateway: gateway,
                   onConnect: (onConnectSaved == null || _isConnecting)
                       ? null
-                      : () => _runConnecting(() => onConnectSaved(gateway)),
+                      : () => _connectToSaved(gateway, onConnectSaved),
+                  onDelete: (onDeleteSaved == null || _isConnecting)
+                      ? null
+                      : () => _deleteSaved(gateway, onDeleteSaved),
                 ),
                 const SizedBox(height: 8),
               ],
