@@ -26,8 +26,8 @@ class CanMessageParser {
             name: item['name'] as String,
             tag: item['tag'] as String,
             type: item['type'] as String,
-            value: item['value'] as String,
-            unit: item['unit'] as String,
+            value: item['value'] as num,
+            unit: item['unit'] as String?,
           ),
         );
       }
@@ -35,12 +35,12 @@ class CanMessageParser {
       return CanMessage(
         id: json['id'] as int,
         category: json['category'] as String,
-        group: json['group'] as String,
+        group: json['group'] as String?,
         timestamp: json['timestamp'] as int,
-        variables: signals,
-        latitude: (json['latitude'] as num).toDouble(),
-        longitude: (json['longitude'] as num).toDouble(),
-        altitude: (json['altitude'] as num).toDouble(),
+        variables: List.unmodifiable(signals),
+        latitude: (json['latitude'] as num?)?.toDouble(),
+        longitude: (json['longitude'] as num?)?.toDouble(),
+        altitude: (json['altitude'] as num?)?.toDouble(),
       );
     } on TypeError {
       return null;
@@ -53,13 +53,21 @@ class CanMessageParser {
     try {
       final decoded = jsonDecode(responseBody);
 
-      if (decoded is! List) {
+      final dynamic messagesJson;
+
+      if (decoded is Map<String, dynamic>) {
+        messagesJson = decoded['messages'];
+      } else {
+        messagesJson = decoded;
+      }
+
+      if (messagesJson is! List) {
         return [];
       }
 
       final messages = <CanMessage>[];
 
-      for (final item in decoded) {
+      for (final item in messagesJson) {
         if (item is! Map<String, dynamic>) {
           continue;
         }

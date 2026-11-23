@@ -18,7 +18,7 @@ void main() {
               "name": "Accelerator pedal position",
               "tag": "accelerator_pedal_position",
               "type": "BYTE",
-              "value": "41.6",
+              "value": 41.6,
               "unit": "%"
             }
           ],
@@ -47,7 +47,7 @@ void main() {
       expect(signal.name, 'Accelerator pedal position');
       expect(signal.tag, 'accelerator_pedal_position');
       expect(signal.type, 'BYTE');
-      expect(signal.value, '41.6');
+      expect(signal.value, 41.6);
       expect(signal.unit, '%');
 
       expect(message.latitude, 0.0);
@@ -92,7 +92,7 @@ void main() {
                 "name": "Accelerator pedal position",
                 "tag": "accelerator_pedal_position",
                 "type": "BYTE",
-                "value": 41.6,
+                "value": "invalid",
                 "unit": "%"
               }
             ],
@@ -121,7 +121,7 @@ void main() {
                 "name": "Engine speed",
                 "tag": "engine_speed",
                 "type": "BYTE",
-                "value": "1500",
+                "value": 1500,
                 "unit": "rpm"
               }
             ],
@@ -233,14 +233,14 @@ void main() {
                 "name": "Accelerator pedal position",
                 "tag": "accelerator_pedal_position",
                 "type": "BYTE",
-                "value": "41.6",
+                "value": 41.6,
                 "unit": "%"
               },
               {
                 "name": "Engine speed",
                 "tag": "engine_speed",
                 "type": "WORD",
-                "value": "1500",
+                "value": 1500,
                 "unit": "rpm"
               }
             ],
@@ -257,11 +257,11 @@ void main() {
       expect(messages.first.variables.length, 2);
 
       expect(messages.first.variables[0].name, 'Accelerator pedal position');
-      expect(messages.first.variables[0].value, '41.6');
+      expect(messages.first.variables[0].value, 41.6);
       expect(messages.first.variables[0].unit, '%');
 
       expect(messages.first.variables[1].name, 'Engine speed');
-      expect(messages.first.variables[1].value, '1500');
+      expect(messages.first.variables[1].value, 1500);
       expect(messages.first.variables[1].unit, 'rpm');
     });
     test('skips a CAN message when signal value is missing', () {
@@ -324,7 +324,7 @@ void main() {
               "name": "Accelerator pedal position",
               "tag": "accelerator_pedal_position",
               "type": "BYTE",
-              "value": "41.6",
+              "value": 41.6,
               "unit": "%"
             }
           ],
@@ -340,7 +340,7 @@ void main() {
       expect(message!.id, 217056000);
       expect(message.variables.length, 1);
       expect(message.variables.first.name, 'Accelerator pedal position');
-      expect(message.variables.first.value, '41.6');
+      expect(message.variables.first.value, 41.6);
     });
 
     test('returns null for invalid single CAN message JSON', () {

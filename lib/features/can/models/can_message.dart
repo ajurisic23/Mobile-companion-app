@@ -4,20 +4,20 @@ class CanMessage {
   const CanMessage({
     required this.id,
     required this.category,
-    required this.group,
+    this.group,
     required this.timestamp,
     required this.variables,
-    required this.latitude,
-    required this.longitude,
-    required this.altitude,
+    this.latitude,
+    this.longitude,
+    this.altitude,
   });
 
   final int id;
   final String category;
-  final String group;
+  final String? group;
   final int timestamp;
   final List<CanSignal> variables;
-  final double latitude;
-  final double longitude;
-  final double altitude;
+  final double? latitude;
+  final double? longitude;
+  final double? altitude;
 }

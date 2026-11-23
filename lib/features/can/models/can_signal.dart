@@ -4,12 +4,12 @@ class CanSignal {
     required this.tag,
     required this.type,
     required this.value,
-    required this.unit,
+    this.unit,
   });
 
   final String name;
   final String tag;
   final String type;
-  final String value;
-  final String unit;
+  final num value;
+  final String? unit;
 }
