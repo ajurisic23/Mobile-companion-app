@@ -36,6 +36,7 @@ class GatewayWebSocketService {
     required String host,
     required int port,
     required String canPort,
+    required void Function(String message) onMessage,
   }) async {
     await disconnect();
 
@@ -56,7 +57,9 @@ class GatewayWebSocketService {
       _status = GatewayWebSocketStatus.connected;
 
       _subscription = channel.stream.listen(
-            (_) {},
+            (data) {
+              onMessage(data.toString());
+            },
         onError: (Object error, StackTrace stackTrace) {
           print('WebSocket greška na streamu: $error');
           _cleanup(nextStatus: GatewayWebSocketStatus.error);
@@ -72,6 +75,7 @@ class GatewayWebSocketService {
     } catch (e) {
       print('Greška pri spajanju na WebSocket: $e');
       _cleanup(nextStatus: GatewayWebSocketStatus.error);
+      rethrow;
     }
   }
 
