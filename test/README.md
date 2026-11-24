@@ -38,6 +38,9 @@ mobile_companion_app/
 │   │   ├── alerts/
 │   │   │   ├── unit/
 │   │   │   └── widget/
+│   │   ├── can/
+│   │   │   ├── unit/
+│   │   │   └── widget/
 │   │   └── settings/
 │   │       ├── unit/
 │   │       └── widget/
@@ -53,6 +56,16 @@ tijekom daljnjeg razvoja aplikacije.
 
 Trenutačno su implementirani jedinični i widget testovi unutar
 direktorija `test/`.
+Trenutačno implementirani testovi raspoređeni su u sljedeće direktorije:
+
+| Direktorij | Vrsta testova |
+|---|---|
+| `test/app/widget/` | Widget testovi glavne navigacije |
+| `test/features/gateway/unit/` | Jedinični testovi gateway modela, servisa, repozitorija, kontrolera i validatora |
+| `test/features/gateway/widget/` | Widget testovi gateway ekrana i pripadajućih komponenti |
+| `test/features/dashboard/widget/` | Widget testovi dashboard ekrana |
+
+Prilikom dodavanja novih funkcionalnosti pripadajuće testove potrebno je smjestiti u odgovarajuće direktorije prema funkcionalnosti i vrsti testa.
 
 Direktorij `integration_test/` još nije kreiran te će se dodati
 prilikom implementacije prvih integracijskih testova.
@@ -177,7 +190,7 @@ Primjeri:
 | GatewayInfo | `gateway_info_test.dart` |
 | GatewayScreen | `gateway_screen_test.dart` |
 | GatewayHealthService | `gateway_health_service_test.dart` |
-| CanSignalParser | `can_signal_parser_test.dart` |
+| CanMessageParser | `can_message_parser_test.dart` |
 | AlertRule | `alert_rule_test.dart` |
 | MainNavigation | `main_navigation_test.dart` |
 
@@ -207,7 +220,7 @@ Prilikom dodavanja novog testa potrebno je:
 Primjeri mogućih lokacija budućih testova:
 
 ```text
-test/features/dashboard/unit/can_signal_parser_test.dart
+test/features/can/unit/can_message_parser_test.dart
 test/features/dashboard/widget/can_signal_card_test.dart
 test/features/alerts/unit/alert_rule_test.dart
 test/features/alerts/widget/alert_display_test.dart
