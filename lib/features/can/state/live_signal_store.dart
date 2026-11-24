@@ -80,4 +80,12 @@ class LiveSignalStore extends ChangeNotifier {
     _entriesByTag.clear();
     notifyListeners();
   }
+
+  void applyRawMessage(String rawMessage) {
+    final message = _parser.parseSingleMessage(rawMessage);
+
+    if (message != null) {
+      applyMessages([message]);
+    }
+  }
 }
