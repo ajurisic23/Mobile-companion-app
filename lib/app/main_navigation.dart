@@ -6,6 +6,7 @@ import 'main_layout.dart';
 import 'navigation_tab.dart';
 import 'screen_placeholder.dart';
 
+import '../features/dashboard/screens/dashboard_screen.dart';
 import '../features/gateway/screens/gateway_screen.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -23,6 +24,7 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget _buildScreen(NavigationTab tab) {
     return switch (tab) {
       NavigationTab.gateway => const GatewayScreen(),
+      NavigationTab.dashboard => const DashboardScreen(),
       NavigationTab.settings => const SettingsScreen(),
 
       _ => ScreenPlaceholder(title: tab.title),
