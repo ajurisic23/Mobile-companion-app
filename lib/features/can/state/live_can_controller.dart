@@ -32,7 +32,7 @@ class LiveCanController extends ChangeNotifier {
         port: gateway.port,
         canPort: canPort.name,
         onMessage: (rawMessage) {
-          _signalStore.applyRawMessage(rawMessage);
+          _signalStore.applyRawJson(rawMessage);
         },
       );
     } finally {

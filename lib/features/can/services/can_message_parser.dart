@@ -93,6 +93,22 @@ class CanMessageParser {
         return null;
       }
 
+      final messagesJson = decoded['messages'];
+
+      if (messagesJson is List) {
+        for (final item in messagesJson) {
+          if (item is Map<String, dynamic>) {
+            final message = parseMessage(item);
+
+            if (message != null) {
+              return message;
+            }
+          }
+        }
+
+        return null;
+      }
+
       return parseMessage(decoded);
     } on FormatException {
       return null;
