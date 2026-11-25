@@ -1,0 +1,67 @@
+
+{
+  "@@locale": "en",
+  "connectToGateway": "Connect to a CAN gateway",
+  "simulatedData": "Simulated data",
+  "simulatedDataSubtitle": "continue without connecting to a real device",
+  "gatewayAddress": "Gateway address",
+  "port": "Port",
+  "optional": "optional",
+  "connect": "Connect",
+  "tryAgain": "Try again",
+  "savedGateways": "Saved gateways",
+  "deleteGateway": "Delete gateway?",
+  "deleteGatewayConfirmation": "Are you sure you want to delete the saved gateway {address}?",
+  "@deleteGatewayConfirmation": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "gatewayAddressRequired": "Enter the gateway address.",
+  "gatewayAddressWithoutPath": "Enter only the address, without http:// or a path.",
+  "gatewayAddressWithoutPort": "Enter the port in the Port field, not in the address.",
+  "gatewayAddressWithoutSpaces": "The address must not contain spaces.",
+  "invalidIpAddress": "Invalid IP address. Expected format: 192.168.0.100.",
+  "invalidHostName": "Invalid host name.",
+  "portMustBeNumber": "Port must be a number.",
+  "invalidPortRange": "Port must be between 1 and 65535.",
+  "connectionRefused": "The device refused the connection. Check the port number.",
+  "connectionTimeout": "The gateway did not respond in time. Check that you are close enough and connected to the gateway Wi-Fi, then try again.",
+  "connectionNetworkUnavailable": "Cannot reach the gateway. Check that your phone is connected to the gateway Wi-Fi network.",
+  "connectionUnknownHost": "The address was not found. Check that it is typed correctly.",
+  "connectionNotGateway": "The device responded, but it does not look like a CAN gateway. Check the address and port.",
+  "connectionBadStatus": "The device responded with an unexpected status{status}. Check the address and port.",
+  "@connectionBadStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionInvalidResponse": "The device responded, but the response was not understood. Check that this is a CAN gateway.",
+  "connectionUnavailable": "The gateway is not available. Check the address and port, then try again.",
+  "connectionUnknown": "Something went wrong while connecting. Please try again.",
+  "connectToSeePorts": "Connect to a gateway to see its CAN ports.",
+  "loadingCanPorts": "Loading CAN ports...",
+  "noCanPorts": "This gateway has no CAN ports available.",
+  "canPort": "CAN port",
+  "selectCanPort": "Select a CAN port",
+  "disabled": "disabled",
+  "canPortCount": "{count, plural, =1{1 port} other{{count} ports}}",
+  "@canPortCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "canPortsTimeout": "The gateway did not respond in time. Check the connection and try again.",
+  "canPortsNetwork": "Could not reach the gateway. Check that you are on the same network.",
+  "canPortsUnavailable": "The gateway could not provide the CAN ports.",
+  "canPortsInvalidResponse": "The gateway returned an unexpected response.",
+  "canPortsUnknown": "Could not load the CAN ports."
+}
