@@ -349,6 +349,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not load the CAN ports.'**
   String get canPortsUnknown;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @english.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// No description provided for @german.
+  ///
+  /// In en, this message translates to:
+  /// **'Deutsch'**
+  String get german;
 }
 
 class _AppLocalizationsDelegate

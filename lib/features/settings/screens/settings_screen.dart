@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'package:mobile_companion_app/core/widgets/buttons/primary_button.dart';
 import 'package:mobile_companion_app/core/widgets/feedback/confirmation_dialog.dart';
 import 'package:mobile_companion_app/features/settings/mock_data.dart';
+import 'package:mobile_companion_app/features/multilanguage/locale_controller.dart';
 
 import '../models/gateway_setting_section.dart';
 import '../widgets/settings_section_card.dart';
@@ -17,6 +20,10 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final localeController = context.watch<LocaleController>();
+
+    final isGerman =
+        localeController.locale.languageCode == 'de';
 
     // privremeno
     const String connectionInterface = 'CAN0';
@@ -30,13 +37,54 @@ class SettingsScreen extends StatelessWidget {
         Expanded(
           child: ListView(
             children: [
-              Text('Configure the gateway', style: textTheme.titleLarge),
+              Text(
+                isGerman ? 'Sprache' : 'Language',
+                style: textTheme.titleLarge,
+              ),
+
+              const SizedBox(height: 12),
+
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment<String>(
+                    value: 'en',
+                    label: Text('English'),
+                  ),
+                  ButtonSegment<String>(
+                    value: 'de',
+                    label: Text('Deutsch'),
+                  ),
+                ],
+                selected: {
+                  localeController.locale.languageCode,
+                },
+                onSelectionChanged: (selection) {
+                  localeController.setLocale(
+                    Locale(selection.first),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 24),
+
+              Text(
+                'Configure the gateway',
+                style: textTheme.titleLarge,
+              ),
+
               const SizedBox(height: 8),
+
               Text(
                 '$connectionInterface\n$ipAddress',
-                style: textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                style: textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey,
+                ),
               ),
+
               const SizedBox(height: 24),
+
               ...displaySections.map((section) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -46,12 +94,25 @@ class SettingsScreen extends StatelessWidget {
             ],
           ),
         ),
+
         const SizedBox(height: 16),
-        PrimaryButton(label: "Save changes", onPressed: () {
-          showDialog(context: context, builder: (context) => ConfirmationDialog(
-              type: DialogType.warning, title: "Confirm Gateway Changes", description: 'Are you sure you want to save these changes? Modifying gateway settings may temporarily disrupt communication.',
-          ));
-        })
+
+        PrimaryButton(
+          label: 'Save changes',
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => ConfirmationDialog(
+                type: DialogType.warning,
+                title: 'Confirm Gateway Changes',
+                description:
+                'Are you sure you want to save these changes? '
+                    'Modifying gateway settings may temporarily '
+                    'disrupt communication.',
+              ),
+            );
+          },
+        ),
       ],
     );
   }

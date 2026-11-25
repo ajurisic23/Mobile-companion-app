@@ -63,5 +63,8 @@
   "canPortsNetwork": "Could not reach the gateway. Check that you are on the same network.",
   "canPortsUnavailable": "The gateway could not provide the CAN ports.",
   "canPortsInvalidResponse": "The gateway returned an unexpected response.",
-  "canPortsUnknown": "Could not load the CAN ports."
+  "canPortsUnknown": "Could not load the CAN ports.",
+  "language": "Language",
+  "english": "English",
+  "german": "Deutsch"
 }

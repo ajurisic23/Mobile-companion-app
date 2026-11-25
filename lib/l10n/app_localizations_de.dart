@@ -164,4 +164,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get canPortsUnknown => 'Die CAN-Ports konnten nicht geladen werden.';
+
+  @override
+  String get language => 'Sprache';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get german => 'Deutsch';
 }

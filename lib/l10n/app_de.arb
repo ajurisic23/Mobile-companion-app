@@ -42,5 +42,8 @@
   "canPortsNetwork": "Das Gateway konnte nicht erreicht werden. Überprüfen Sie, ob Sie sich im selben Netzwerk befinden.",
   "canPortsUnavailable": "Das Gateway konnte die CAN-Ports nicht bereitstellen.",
   "canPortsInvalidResponse": "Das Gateway hat eine unerwartete Antwort zurückgegeben.",
-  "canPortsUnknown": "Die CAN-Ports konnten nicht geladen werden."
+  "canPortsUnknown": "Die CAN-Ports konnten nicht geladen werden.",
+  "language": "Sprache",
+  "english": "English",
+  "german": "Deutsch"
 }
