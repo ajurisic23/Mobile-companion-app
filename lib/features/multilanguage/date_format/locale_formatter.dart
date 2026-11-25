@@ -20,4 +20,10 @@ class LocaleFormatter {
     final local = dateTime.toLocal();
     return DateFormat.Hm(_localeName(context)).format(local);
   }
+  static String formatTemperature(BuildContext context, double celsius) {
+    final localeName = _localeName(context);
+    final formattedNumber = NumberFormat('0.0', localeName).format(celsius);
+    return '$formattedNumber °C';
+  }
+
 }

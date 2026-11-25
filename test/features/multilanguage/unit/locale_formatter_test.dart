@@ -69,4 +69,37 @@ void main() {
       expect(find.text('14:30'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    '4. Temperatura 85.5 °C prikazuje se kao "85.5 °C" na engleskom i "85,5 °C" na njemačkom',
+        (tester) async {
+      final localeNotifier = ValueNotifier<Locale>(const Locale('en'));
+
+      await tester.pumpWidget(
+        ValueListenableBuilder<Locale>(
+          valueListenable: localeNotifier,
+          builder: (context, currentLocale, _) {
+            return _LocaleTestHost(
+              locale: currentLocale,
+              builder: (context) {
+                final formattedTemp = LocaleFormatter.formatTemperature(context, 85.5);
+                return Text(formattedTemp);
+              },
+            );
+          },
+        ),
+      );
+
+      expect(find.text('85.5 °C'), findsOneWidget);
+
+      localeNotifier.value = const Locale('de');
+      await tester.pumpAndSettle();
+
+      expect(find.text('85,5 °C'), findsOneWidget);
+    },
+  );
+
+
+
 }
+
