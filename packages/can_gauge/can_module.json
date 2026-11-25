@@ -1,0 +1,6 @@
+{
+  "package": "can_gauge",
+  "entrypoint": "can_gauge.dart",
+  "class": "CanGaugeView",
+  "order": 30
+}

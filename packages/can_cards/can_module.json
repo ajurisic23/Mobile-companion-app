@@ -1,0 +1,6 @@
+{
+  "package": "can_cards",
+  "entrypoint": "can_cards.dart",
+  "class": "CanCardsView",
+  "order": 10
+}
