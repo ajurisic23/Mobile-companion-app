@@ -20,7 +20,7 @@ class CanSignalGaugeGrid extends StatelessWidget {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        mainAxisExtent: 220,
+        mainAxisExtent: 260,
       ),
       itemCount: signals.length,
       itemBuilder: (context, index) {
