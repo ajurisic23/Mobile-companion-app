@@ -36,10 +36,15 @@ class CanSignalCard extends StatelessWidget {
               spacing: 6,
               runSpacing: 4,
               children: [
-                Text(
-                  signal.value,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    signal.value,
+                    maxLines: 1,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 if (hasUnit)

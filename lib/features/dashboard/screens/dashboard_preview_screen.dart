@@ -63,12 +63,12 @@ class _DashboardPreviewScreenState
               ),
               SizedBox(height: 16),
               Text(
-                'Nema dostupnih CAN signala',
+                'No CAN signals available',
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 8),
               Text(
-                'Signali će se prikazati kada podaci postanu dostupni.',
+                'Signals will be displayed when data becomes available.',
                 textAlign: TextAlign.center,
               ),
             ],
@@ -79,7 +79,7 @@ class _DashboardPreviewScreenState
 
     if (widget.views.isEmpty) {
       return const Center(
-        child: Text('Nema dostupnih modula za prikaz signala.'),
+        child: Text('No signal display modules available.'),
       );
     }
 
@@ -95,21 +95,36 @@ class _DashboardPreviewScreenState
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-          child: SegmentedButton<String>(
-            segments: widget.views.map((view) {
-              return ButtonSegment<String>(
-                value: view.id,
-                label: Text(view.label),
-                icon: Icon(view.icon),
-              );
-            }).toList(),
-            selected: {selectedId},
-            onSelectionChanged: (selection) {
-              setState(() {
-                _selectedViewId = selection.first;
-              });
-            },
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'CAN signals:',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SegmentedButton<String>(
+                showSelectedIcon: false,
+                segments: widget.views.map((view) {
+                  return ButtonSegment<String>(
+                    value: view.id,
+                    icon: Icon(view.icon),
+                    tooltip: view.label,
+                  );
+                }).toList(),
+                selected: {selectedId},
+                onSelectionChanged: (selection) {
+                  setState(() {
+                    _selectedViewId = selection.first;
+                  });
+                },
+              ),
+            ],
           ),
         ),
         Expanded(

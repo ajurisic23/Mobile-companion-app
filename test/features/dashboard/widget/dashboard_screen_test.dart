@@ -7,6 +7,7 @@ import 'package:mobile_companion_app/features/gateway/services/can_ports_service
 import 'package:mobile_companion_app/features/gateway/services/gateway_health_service.dart';
 import 'package:mobile_companion_app/features/gateway/state/active_gateway_controller.dart';
 import 'package:provider/provider.dart';
+import 'package:mobile_companion_app/features/can/state/live_signal_store.dart';
 
 const _gateway = GatewayInfo(
   name: 'Address 1',
@@ -46,9 +47,19 @@ class _FakeHealthService extends GatewayHealthService {
   }
 }
 
-Widget _wrap(ActiveGatewayController controller, CanPortsService service) {
-  return ChangeNotifierProvider<ActiveGatewayController>.value(
-    value: controller,
+Widget _wrap(
+    ActiveGatewayController controller,
+    CanPortsService service,
+    ) {
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider<ActiveGatewayController>.value(
+        value: controller,
+      ),
+      ChangeNotifierProvider<LiveSignalStore>(
+        create: (_) => LiveSignalStore(),
+      ),
+    ],
     child: MaterialApp(
       home: Scaffold(
         body: DashboardScreen(

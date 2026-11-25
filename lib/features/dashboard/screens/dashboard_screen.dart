@@ -1,5 +1,8 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:can_cards/can_cards.dart';
+import 'package:can_list/can_list.dart';
 
 import '../../can/state/live_can_controller.dart';
 import '../../can/state/live_signal_store.dart';
@@ -9,7 +12,10 @@ import '../../gateway/state/active_gateway_controller.dart';
 import '../../gateway/widgets/can_port_selector.dart';
 import '../../gateway/widgets/gateway_status_row.dart';
 
-class DashboardScreen extends StatelessWidget {
+import '../services/live_can_signal_source.dart';
+import 'dashboard_preview_screen.dart';
+
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({
     super.key,
     this.canPortsService,
@@ -18,6 +24,22 @@ class DashboardScreen extends StatelessWidget {
 
   final CanPortsService? canPortsService;
   final GatewayHealthService? gatewayHealthService;
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  late final LiveCanSignalSource _signalSource;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _signalSource = LiveCanSignalSource(
+      context.read<LiveSignalStore>(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,23 +51,28 @@ class DashboardScreen extends StatelessWidget {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
-        child: ListView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text('Live Dashboard', style: textTheme.titleLarge),
+
             const SizedBox(height: 24),
+
             CanPortSelector(
               gateway: gateway,
-              selectedPort: activeGateway.port,
+              selectedPort: selectedPort,
               onSelected: activeGateway.selectPort,
-              service: canPortsService,
+              service: widget.canPortsService,
             ),
+
             if (gateway != null) ...[
               const SizedBox(height: 12),
               GatewayStatusRow(
                 gateway: gateway,
-                healthService: gatewayHealthService,
+                healthService: widget.gatewayHealthService,
               ),
             ],
+
             if (gateway != null && selectedPort != null)
               ElevatedButton(
                 onPressed: () {
@@ -59,31 +86,14 @@ class DashboardScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            const Text(
-              'Received CAN signals:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: DashboardPreviewScreen(
+                signalSource: _signalSource,
+                views: const [
+                  CanCardsView(),
+                  CanListView(),
+                ],
               ),
-            ),
-
-            Consumer<LiveSignalStore>(
-              builder: (context, store, child) {
-                final signals = store.entriesByTag.values.toList();
-
-                if (signals.isEmpty) {
-                  return const Text('Waiting for signals...');
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: signals.map((entry) {
-                    return Text(
-                      '${entry.tag}: ${entry.value} ${entry.unit ?? ''}',
-                    );
-                  }).toList(),
-                );
-              },
             ),
           ],
         ),
