@@ -29,6 +29,8 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   late final LiveCanSignalSource _signalSource;
+  bool _isConnecting = false;
+  bool _connectionFailed = false;
 
   @override
   void initState() {
@@ -59,7 +61,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
             CanPortSelector(
               gateway: gateway,
               selectedPort: selectedPort,
-              onSelected: activeGateway.selectPort,
+              onSelected: (canPort) async {
+                if (gateway == null ||
+                    !canPort.enabled ||
+                    _isConnecting) {
+                  return;
+                }
+
+                final liveCanController =
+                context.read<LiveCanController>();
+
+                final signalStore =
+                context.read<LiveSignalStore>();
+
+                setState(() {
+                  _isConnecting = true;
+                  _connectionFailed = false;
+                });
+
+                activeGateway.selectPort(canPort);
+
+                try {
+                  await liveCanController.disconnect();
+
+                  signalStore.clear();
+
+                  await liveCanController.connect(
+                    gateway: gateway,
+                    canPort: canPort,
+                  );
+
+                  if (!mounted) return;
+
+                  setState(() {
+                    _connectionFailed = !liveCanController.isConnected;
+                  });
+                } catch (error) {
+                  debugPrint('CAN connection failed: $error');
+
+                  if (!mounted) return;
+
+                  setState(() {
+                    _connectionFailed = true;
+                  });
+                } finally {
+                  if (mounted) {
+                    setState(() {
+                      _isConnecting = false;
+                    });
+                  }
+                }
+              },
               service: widget.canPortsService,
             ),
 
@@ -71,16 +123,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
 
-            if (gateway != null && selectedPort != null)
-              ElevatedButton(
-                onPressed: () {
-                  context.read<LiveCanController>().connect(
-                    gateway: gateway,
-                    canPort: selectedPort,
-                  );
-                },
-                child: const Text('Start live CAN'),
-              ),
 
             const SizedBox(height: 20),
 
@@ -88,6 +130,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: DashboardPreviewScreen(
                 signalSource: _signalSource,
                 views: registeredCanViews,
+                hasGateway: gateway != null,
+                hasSelectedPort: selectedPort != null,
+                isConnecting: _isConnecting,
+                connectionFailed: _connectionFailed,
               ),
             ),
           ],
