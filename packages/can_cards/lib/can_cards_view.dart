@@ -11,7 +11,7 @@ class CanCardsView implements CanSignalView {
   String get id => 'cards';
 
   @override
-  String get label => 'Kartice';
+  String get label => 'Cards';
 
   @override
   IconData get icon => Icons.grid_view;

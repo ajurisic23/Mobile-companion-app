@@ -1,0 +1,6 @@
+{
+  "package": "can_list",
+  "entrypoint": "can_list.dart",
+  "class": "CanListView",
+  "order": 20
+}

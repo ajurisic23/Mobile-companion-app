@@ -1,9 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:can_cards/can_cards.dart';
-import 'package:can_list/can_list.dart';
-
+import '../generated/can_module_registry.g.dart';
 import '../../can/state/live_can_controller.dart';
 import '../../can/state/live_signal_store.dart';
 import '../../gateway/services/can_ports_service.dart';
@@ -89,10 +87,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Expanded(
               child: DashboardPreviewScreen(
                 signalSource: _signalSource,
-                views: const [
-                  CanCardsView(),
-                  CanListView(),
-                ],
+                views: registeredCanViews,
               ),
             ),
           ],

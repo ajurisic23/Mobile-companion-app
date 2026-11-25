@@ -32,10 +32,13 @@ dependencies:
   shared_preferences: ^2.5.6
   can_core:
     path: packages/can_core
+
+  # BEGIN GENERATED CAN MODULES
   can_cards:
     path: packages/can_cards
   can_list:
     path: packages/can_list
+  # END GENERATED CAN MODULES
 
 dev_dependencies:
   flutter_test:

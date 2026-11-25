@@ -11,7 +11,7 @@ class CanListView implements CanSignalView {
   String get id => 'list';
 
   @override
-  String get label => 'Lista';
+  String get label => 'List';
 
   @override
   IconData get icon => Icons.view_list;
