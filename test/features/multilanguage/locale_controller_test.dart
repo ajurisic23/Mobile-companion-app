@@ -33,4 +33,40 @@ void main() {
     expect(controller.locale.languageCode, 'en');
   });
 
+  test('uses the saved language over the device language', () async {
+    final controller = await createController(
+      saved: {'app_language': 'de'},
+    );
+
+    expect(controller.locale.languageCode, 'de');
+  });
+  test('setLocale changes the language and notifies listeners', () async {
+    final controller = await createController();
+    int calls = 0;
+
+    controller.addListener(() => calls++);
+
+    await controller.setLocale(const Locale('de'));
+
+    expect(controller.locale.languageCode, 'de');
+    expect(calls, 1);
+  });
+  test('setLocale saves the choice', () async {
+    final controller = await createController();
+    await controller.setLocale(const Locale('de'));
+
+    final newController = LocaleController(
+      prefs: await SharedPreferences.getInstance(),
+      deviceLocale: const Locale('en'),
+    );
+
+    expect(newController.locale.languageCode, 'de');
+  });
+  test('setLocale ignores an unsupported language', () async {
+    final controller = await createController();
+
+    await controller.setLocale(const Locale('fr'));
+
+    expect(controller.locale.languageCode, 'en');
+  });
 }
