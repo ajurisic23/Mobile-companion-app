@@ -3,6 +3,7 @@ import '../../../core/widgets/action_card.dart';
 import '../../../core/widgets/inputs/app_text_field.dart';
 import '../../../core/widgets/feedback/inline_error.dart';
 import '../../../core/widgets/buttons/loading_button.dart';
+import '../../multilanguage/date_format/locale_formatter.dart';
 import '../models/connection_failure.dart';
 import '../models/gateway_info.dart';
 import '../services/gateway_health_service.dart';
@@ -146,11 +147,17 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
     final onDeleteSaved = widget.onDeleteSaved;
     final errorMessage = _errorMessage;
 
+    final sampleDateTime = DateTime(2026, 11, 25, 14, 30);
+    final formattedDate = LocaleFormatter.formatDate(context, sampleDateTime);
+    final formattedTime = LocaleFormatter.formatTime(context, sampleDateTime)
+        .replaceAll('\u202f', ' ');
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
         child: ListView(
           children: [
+            Text('Date check: $formattedDate · $formattedTime'),
             Text('Connect to a CAN gateway', style: textTheme.titleLarge),
             const SizedBox(height: 24),
             ActionCard(
