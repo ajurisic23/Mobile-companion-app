@@ -39,6 +39,13 @@ packages:
       relative: true
     source: path
     version: "0.0.1"
+  can_gauge:
+    dependency: "direct main"
+    description:
+      path: "packages/can_gauge"
+      relative: true
+    source: path
+    version: "0.0.1"
   can_list:
     dependency: "direct main"
     description:

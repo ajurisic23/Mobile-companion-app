@@ -38,6 +38,8 @@ dependencies:
     path: packages/can_cards
   can_list:
     path: packages/can_list
+  can_gauge:
+    path: packages/can_gauge
   # END GENERATED CAN MODULES
 
 dev_dependencies:
