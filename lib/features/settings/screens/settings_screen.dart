@@ -21,7 +21,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final currentCode = context.watch<LocaleController>().locale.languageCode;
-
+    final formattedTemp = LocaleFormatter.formatTemperature(context, 85.5);
     final sampleDateTime = DateTime(2026, 11, 25, 14, 30);
     final formattedDate = LocaleFormatter.formatDate(context, sampleDateTime);
     final formattedTime = LocaleFormatter.formatTime(context, sampleDateTime)
@@ -67,6 +67,8 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text('Last check: $formattedDate · $formattedTime'),
+                      const SizedBox(height: 6),
+                      Text('Temperature: $formattedTemp')
                     ],
                   ),
                 ),
