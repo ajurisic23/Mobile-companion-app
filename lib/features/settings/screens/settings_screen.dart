@@ -18,6 +18,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
+
     // privremeno
     const String connectionInterface = 'CAN0';
     const String ipAddress = '192.168.0.100';
