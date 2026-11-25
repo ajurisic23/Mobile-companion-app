@@ -1,9 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+
+import 'package:mobile_companion_app/l10n/app_localizations.dart';
 
 import 'package:mobile_companion_app/features/gateway/screens/connection_screen.dart';
 import 'package:mobile_companion_app/features/gateway/models/connection_failure.dart';
@@ -24,12 +26,9 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: Locale(language),
-        supportedLocales: const [
-          Locale('en'),
-          Locale('de'),
-        ],
+        supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates:
-        GlobalMaterialLocalizations.delegates,
+        AppLocalizations.localizationsDelegates,
         home: Scaffold(
           body: ConnectionScreen(
             initialHost: host,
@@ -46,6 +45,7 @@ void main() {
 
   Future<void> submit(WidgetTester tester) async {
     final germanButton = find.text('Verbinden');
+
     final button = germanButton.evaluate().isNotEmpty
         ? germanButton
         : find.text('Connect');
@@ -80,152 +80,168 @@ void main() {
       expect(find.text('Verbinden'), findsOneWidget);
     });
 
-    testWidgets('Displays saved gateways in German',
-            (tester) async {
-          await pumpScreen(
-            tester,
-            savedGateways: const [
-              GatewayInfo(
-                name: 'Test Gateway',
-                host: '192.168.0.100',
-                port: 8080,
-              ),
-            ],
-          );
+    testWidgets(
+      'Displays saved gateways in German',
+          (tester) async {
+        await pumpScreen(
+          tester,
+          savedGateways: const [
+            GatewayInfo(
+              name: 'Test Gateway',
+              host: '192.168.0.100',
+              port: 8080,
+            ),
+          ],
+        );
 
-          await tester.drag(
-            find.byType(ListView),
-            const Offset(0, -300),
-          );
-          await tester.pumpAndSettle();
+        await tester.drag(
+          find.byType(ListView),
+          const Offset(0, -300),
+        );
 
-          expect(
-            find.text('Gespeicherte Gateways'),
-            findsOneWidget,
-          );
-        });
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Gespeicherte Gateways'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('Gateway validation localization', () {
-    testWidgets('Empty address shows German validation error',
-            (tester) async {
-          await pumpScreen(tester);
+    testWidgets(
+      'Empty address shows German validation error',
+          (tester) async {
+        await pumpScreen(tester);
 
-          await submit(tester);
+        await submit(tester);
 
-          expect(
-            find.text('Gateway-Adresse ist erforderlich'),
-            findsOneWidget,
-          );
-        });
+        expect(
+          find.text('Gateway-Adresse ist erforderlich'),
+          findsOneWidget,
+        );
+      },
+    );
 
-    testWidgets('Invalid port shows German validation error',
-            (tester) async {
-          await pumpScreen(
-            tester,
-            host: '192.168.0.100',
-            port: '99999',
-          );
+    testWidgets(
+      'Invalid port shows German validation error',
+          (tester) async {
+        await pumpScreen(
+          tester,
+          host: '192.168.0.100',
+          port: '99999',
+        );
 
-          await submit(tester);
+        await submit(tester);
 
-          expect(
-            find.text(
-              'Der Port muss zwischen 1 und 65535 liegen',
-            ),
-            findsOneWidget,
-          );
-        });
+        expect(
+          find.text(
+            'Der Port muss zwischen 1 und 65535 liegen',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('Connection failure localization', () {
-    testWidgets('Failed connection shows German retry button',
-            (tester) async {
-          await pumpScreen(
-            tester,
-            host: '192.168.0.100',
-            port: '8080',
-            onConnect: (host, port) async {
-              throw const ConnectionFailure(
-                ConnectionFailureType.connectionRefused,
-              );
-            },
-          );
+    testWidgets(
+      'Failed connection shows German retry button',
+          (tester) async {
+        await pumpScreen(
+          tester,
+          host: '192.168.0.100',
+          port: '8080',
+          onConnect: (host, port) async {
+            throw const ConnectionFailure(
+              ConnectionFailureType.connectionRefused,
+            );
+          },
+        );
 
-          await submit(tester);
+        await submit(tester);
 
-          expect(
-            find.text('Erneut versuchen'),
-            findsOneWidget,
-          );
-        });
+        expect(
+          find.text('Erneut versuchen'),
+          findsOneWidget,
+        );
+      },
+    );
 
-    testWidgets('Connection failure shows German error message',
-            (tester) async {
-          await pumpScreen(
-            tester,
-            host: '192.168.0.100',
-            port: '8080',
-            onConnect: (host, port) async {
-              throw const ConnectionFailure(
-                ConnectionFailureType.connectionRefused,
-              );
-            },
-          );
+    testWidgets(
+      'Connection failure shows German error message',
+          (tester) async {
+        await pumpScreen(
+          tester,
+          host: '192.168.0.100',
+          port: '8080',
+          onConnect: (host, port) async {
+            throw const ConnectionFailure(
+              ConnectionFailureType.connectionRefused,
+            );
+          },
+        );
 
-          await submit(tester);
+        await submit(tester);
 
-          expect(
-            find.text(
-              'Das Gerät hat die Verbindung abgelehnt. '
-                  'Überprüfen Sie die Portnummer.',
-            ),
-            findsOneWidget,
-          );
-        });
+        expect(
+          find.text(
+            'Das Gerät hat die Verbindung abgelehnt. '
+                'Überprüfen Sie die Portnummer.',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('Delete gateway localization', () {
-    testWidgets('Delete dialog displays German texts',
-            (tester) async {
-          const gateway = GatewayInfo(
-            name: 'Test Gateway',
-            host: '192.168.0.100',
-            port: 8080,
-          );
+    testWidgets(
+      'Delete dialog displays German texts',
+          (tester) async {
+        const gateway = GatewayInfo(
+          name: 'Test Gateway',
+          host: '192.168.0.100',
+          port: 8080,
+        );
 
-          await tester.pumpWidget(
-            MaterialApp(
-              locale: const Locale('de'),
-              supportedLocales: const [
-                Locale('en'),
-                Locale('de'),
-              ],
-              localizationsDelegates:
-              GlobalMaterialLocalizations.delegates,
-              home: Scaffold(
-                body: Builder(
-                  builder: (context) {
-                    return ElevatedButton(
-                      onPressed: () {
-                        confirmDeleteGateway(context, gateway);
-                      },
-                      child: const Text('Open dialog'),
-                    );
-                  },
-                ),
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('de'),
+            supportedLocales:
+            AppLocalizations.supportedLocales,
+            localizationsDelegates:
+            AppLocalizations.localizationsDelegates,
+            home: Scaffold(
+              body: Builder(
+                builder: (context) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      confirmDeleteGateway(context, gateway);
+                    },
+                    child: const Text('Open dialog'),
+                  );
+                },
               ),
             ),
-          );
+          ),
+        );
 
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Open dialog'));
-          await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-          expect(find.text('Gateway löschen'), findsOneWidget);
-          expect(find.text('Abbrechen'), findsOneWidget);
-          expect(find.text('Löschen'), findsOneWidget);
-        });
+        await tester.tap(find.text('Open dialog'));
+
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Gateway löschen'),
+          findsOneWidget,
+        );
+        expect(find.text('Abbrechen'), findsOneWidget);
+        expect(find.text('Löschen'), findsOneWidget);
+      },
+    );
   });
 
   group('CAN port localization', () {
@@ -236,12 +252,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           locale: const Locale('de'),
-          supportedLocales: const [
-            Locale('en'),
-            Locale('de'),
-          ],
+          supportedLocales:
+          AppLocalizations.supportedLocales,
           localizationsDelegates:
-          GlobalMaterialLocalizations.delegates,
+          AppLocalizations.localizationsDelegates,
           home: Scaffold(
             body: CanPortSelector(
               gateway: const GatewayInfo(
@@ -261,39 +275,23 @@ void main() {
     }
 
     for (final count in [1, 2, 5]) {
-      testWidgets('Displays $count CAN ports in German',
-              (tester) async {
-            final client = MockClient((request) async {
-              return http.Response(
-                jsonEncode({
-                  'ports': List.generate(
-                    count,
-                        (index) => {
-                      'name': 'CAN$index',
-                      'halName': 'can$index',
-                      'enabled': true,
-                    },
-                  ),
-                }),
-                200,
-              );
-            });
-
-            addTearDown(client.close);
-
-            await pumpSelector(tester, client);
-
-            expect(
-              find.text(count == 1 ? '1 Port' : '$count Ports'),
-              findsOneWidget,
-            );
-          });
-    }
-
-    testWidgets('Failed CAN port fetch shows German error',
+      testWidgets(
+        'Displays $count CAN ports in German',
             (tester) async {
           final client = MockClient((request) async {
-            return http.Response('', 503);
+            return http.Response(
+              jsonEncode({
+                'ports': List.generate(
+                  count,
+                      (index) => {
+                    'name': 'CAN$index',
+                    'halName': 'can$index',
+                    'enabled': true,
+                  },
+                ),
+              }),
+              200,
+            );
           });
 
           addTearDown(client.close);
@@ -302,26 +300,50 @@ void main() {
 
           expect(
             find.text(
-              'Das Gateway konnte die CAN-Ports nicht bereitstellen.',
+              count == 1 ? '1 Port' : '$count Ports',
             ),
             findsOneWidget,
           );
+        },
+      );
+    }
+
+    testWidgets(
+      'Failed CAN port fetch shows German error',
+          (tester) async {
+        final client = MockClient((request) async {
+          return http.Response('', 503);
         });
 
-    testWidgets('Failed CAN port fetch shows German retry button',
-            (tester) async {
-          final client = MockClient((request) async {
-            return http.Response('', 503);
-          });
+        addTearDown(client.close);
 
-          addTearDown(client.close);
+        await pumpSelector(tester, client);
 
-          await pumpSelector(tester, client);
+        expect(
+          find.text(
+            'Das Gateway konnte die CAN-Ports nicht bereitstellen.',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
 
-          expect(
-            find.text('Erneut versuchen'),
-            findsOneWidget,
-          );
+    testWidgets(
+      'Failed CAN port fetch shows German retry button',
+          (tester) async {
+        final client = MockClient((request) async {
+          return http.Response('', 503);
         });
+
+        addTearDown(client.close);
+
+        await pumpSelector(tester, client);
+
+        expect(
+          find.text('Erneut versuchen'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

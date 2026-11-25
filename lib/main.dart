@@ -1,15 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/main_navigation.dart';
 import 'features/can/state/live_can_controller.dart';
 import 'features/can/state/live_signal_store.dart';
 import 'features/gateway/services/gateway_websocket_service.dart';
 import 'features/gateway/state/active_gateway_controller.dart';
+import 'features/multilanguage/locale_controller.dart';
+import 'l10n/app_localizations.dart';
 
-void main() {
-  runApp(const MobileCompanionApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final prefs = await SharedPreferences.getInstance();
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => LocaleController(
+        prefs: prefs,
+        deviceLocale:
+        WidgetsBinding.instance.platformDispatcher.locale,
+      ),
+      child: const MobileCompanionApp(),
+    ),
+  );
 }
 
 class MobileCompanionApp extends StatelessWidget {
@@ -17,6 +33,8 @@ class MobileCompanionApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = context.watch<LocaleController>().locale;
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
@@ -37,8 +55,10 @@ class MobileCompanionApp extends StatelessWidget {
             LiveSignalStore,
             LiveCanController>(
           create: (context) => LiveCanController(
-            webSocketService: context.read<GatewayWebSocketService>(),
-            signalStore: context.read<LiveSignalStore>(),
+            webSocketService:
+            context.read<GatewayWebSocketService>(),
+            signalStore:
+            context.read<LiveSignalStore>(),
           ),
           update: (_, webSocketService, signalStore, controller) =>
           controller ??
@@ -51,6 +71,12 @@ class MobileCompanionApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Mobile Companion App',
         debugShowCheckedModeBanner: false,
+
+        locale: locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates:
+        AppLocalizations.localizationsDelegates,
+
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: Colors.indigo,

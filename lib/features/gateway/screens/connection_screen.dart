@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/widgets/action_card.dart';
 import '../../../core/widgets/inputs/app_text_field.dart';
 import '../../../core/widgets/feedback/inline_error.dart';
 import '../../../core/widgets/buttons/loading_button.dart';
+import '../../../l10n/app_localizations.dart';
+
+import '../localization/gateway_failure_localization.dart';
 import '../models/connection_failure.dart';
 import '../models/gateway_info.dart';
 import '../services/gateway_health_service.dart';
@@ -32,25 +36,34 @@ class ConnectionScreen extends StatefulWidget {
   final String initialPort;
 
   @override
-  State<ConnectionScreen> createState() => _ConnectionScreenState();
+  State<ConnectionScreen> createState() =>
+      _ConnectionScreenState();
 }
 
 class _ConnectionScreenState extends State<ConnectionScreen> {
   final _formKey = GlobalKey<FormState>();
+
   late final TextEditingController _hostController;
   late final TextEditingController _portController;
+
   bool _isConnecting = false;
   bool _isConnected = false;
-  String? _errorMessage;
 
-  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
+  ConnectionFailure? _failure;
+
+  AutovalidateMode _autovalidateMode =
+      AutovalidateMode.disabled;
 
   @override
   void initState() {
     super.initState();
-    _hostController = TextEditingController(text: widget.initialHost)
+
+    _hostController =
+    TextEditingController(text: widget.initialHost)
       ..addListener(_clearConnectionError);
-    _portController = TextEditingController(text: widget.initialPort)
+
+    _portController =
+    TextEditingController(text: widget.initialPort)
       ..addListener(_clearConnectionError);
   }
 
@@ -62,9 +75,9 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
   }
 
   void _clearConnectionError() {
-    if (_errorMessage != null || _isConnected) {
+    if (_failure != null || _isConnected) {
       setState(() {
-        _errorMessage = null;
+        _failure = null;
         _isConnected = false;
       });
     }
@@ -75,26 +88,30 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
         bool showSuccess = true,
       }) async {
     if (_isConnecting) return;
+
     FocusScope.of(context).unfocus();
+
     setState(() {
       _isConnecting = true;
-      _errorMessage = null;
+      _failure = null;
       _isConnected = false;
     });
 
-    String? errorMessage;
+    ConnectionFailure? failure;
+
     try {
       await action();
     } catch (error) {
       debugPrint('Connection failed: $error');
-      errorMessage = ConnectionFailure.fromError(error).message;
+      failure = ConnectionFailure.fromError(error);
     }
 
     if (!mounted) return;
+
     setState(() {
       _isConnecting = false;
-      _errorMessage = errorMessage;
-      _isConnected = showSuccess && errorMessage == null;
+      _failure = failure;
+      _isConnected = showSuccess && failure == null;
     });
   }
 
@@ -102,7 +119,10 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
     if (_isConnecting) return;
 
     if (!_formKey.currentState!.validate()) {
-      setState(() => _autovalidateMode = AutovalidateMode.onUserInteraction);
+      setState(
+            () => _autovalidateMode =
+            AutovalidateMode.onUserInteraction,
+      );
       return;
     }
 
@@ -132,7 +152,9 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
       ) async {
     if (_isConnecting) return;
 
-    final confirmed = await confirmDeleteGateway(context, gateway);
+    final confirmed =
+    await confirmDeleteGateway(context, gateway);
+
     if (!confirmed || !mounted) return;
 
     await onDeleteSaved(gateway);
@@ -140,28 +162,41 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     final textTheme = Theme.of(context).textTheme;
     final onUseSimulated = widget.onUseSimulated;
     final onConnectSaved = widget.onConnectSaved;
     final onDeleteSaved = widget.onDeleteSaved;
-    final errorMessage = _errorMessage;
+
+    final errorMessage = _failure?.localizedMessage(l10n);
 
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
         child: ListView(
           children: [
-            Text('Connect to a CAN gateway', style: textTheme.titleLarge),
+            Text(
+              l10n.connectToGateway,
+              style: textTheme.titleLarge,
+            ),
+
             const SizedBox(height: 24),
+
             ActionCard(
               icon: Icons.science_outlined,
-              title: 'Simulated data',
-              subtitle: 'continue without connecting to a real device',
+              title: l10n.simulatedData,
+              subtitle: l10n.simulatedDataSubtitle,
               onTap: (onUseSimulated == null || _isConnecting)
                   ? null
-                  : () => _runConnecting(onUseSimulated, showSuccess: false),
+                  : () => _runConnecting(
+                onUseSimulated,
+                showSuccess: false,
+              ),
             ),
+
             const SizedBox(height: 24),
+
             Form(
               key: _formKey,
               autovalidateMode: _autovalidateMode,
@@ -171,61 +206,93 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                   Expanded(
                     child: AppTextField(
                       controller: _hostController,
-                      label: 'Gateway address',
+                      label: l10n.gatewayAddress,
                       hint: '192.168.0.100',
                       keyboardType: TextInputType.url,
                       textInputAction: TextInputAction.next,
                       enabled: !_isConnecting,
-                      validator: validateGatewayHost,
+                      validator: (value) =>
+                          validateGatewayHost(
+                            value,
+                            l10n: l10n,
+                          ),
                     ),
                   ),
+
                   const SizedBox(width: 12),
+
                   SizedBox(
                     width: 112,
                     child: AppTextField(
                       controller: _portController,
-                      label: 'Port',
-                      hint: 'optional',
+                      label: l10n.port,
+                      hint: l10n.optional,
                       keyboardType: TextInputType.number,
                       textInputAction: TextInputAction.done,
                       enabled: !_isConnecting,
-                      validator: validateGatewayPort,
+                      validator: (value) =>
+                          validateGatewayPort(
+                            value,
+                            l10n: l10n,
+                          ),
                       onSubmitted: (_) => _submit(),
                     ),
                   ),
                 ],
               ),
             ),
+
             const SizedBox(height: 16),
+
             LoadingButton(
-              label: errorMessage == null ? 'Connect' : 'Try again',
+              label: errorMessage == null
+                  ? l10n.connect
+                  : l10n.tryAgain,
               isLoading: _isConnecting,
               onPressed: _submit,
             ),
+
             if (errorMessage != null) ...[
               const SizedBox(height: 16),
               InlineError(message: errorMessage),
             ],
+
             if (_isConnected) ...[
               const SizedBox(height: 16),
               const GatewayHealthStatusWidget(
                 status: GatewayHealthStatus.available,
               ),
             ],
+
             if (widget.savedGateways.isNotEmpty) ...[
               const SizedBox(height: 24),
-              Text('Saved gateways', style: textTheme.titleSmall),
+
+              Text(
+                l10n.savedGateways,
+                style: textTheme.titleSmall,
+              ),
+
               const SizedBox(height: 8),
+
               for (final gateway in widget.savedGateways) ...[
                 SavedGatewayTile(
                   gateway: gateway,
-                  onConnect: (onConnectSaved == null || _isConnecting)
+                  onConnect:
+                  (onConnectSaved == null || _isConnecting)
                       ? null
-                      : () => _connectToSaved(gateway, onConnectSaved),
-                  onDelete: (onDeleteSaved == null || _isConnecting)
+                      : () => _connectToSaved(
+                    gateway,
+                    onConnectSaved,
+                  ),
+                  onDelete:
+                  (onDeleteSaved == null || _isConnecting)
                       ? null
-                      : () => _deleteSaved(gateway, onDeleteSaved),
+                      : () => _deleteSaved(
+                    gateway,
+                    onDeleteSaved,
+                  ),
                 ),
+
                 const SizedBox(height: 8),
               ],
             ],
