@@ -27,6 +27,10 @@ void main() {
     expect(controller.locale.languageCode, 'de');
   });
 
+  test('uses English for any other device language', () async {
+    final controller = await createController(deviceLanguage: 'fr');
 
+    expect(controller.locale.languageCode, 'en');
+  });
 
 }
