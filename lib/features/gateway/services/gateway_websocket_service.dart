@@ -9,10 +9,6 @@ enum GatewayWebSocketStatus {
 }
 
 class GatewayWebSocketService {
-  static const String defaultHost = '192.168.0.100';
-  static const int defaultPort = 10000;
-  static const String wsPath = '/ws';
-
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _subscription;
   GatewayWebSocketStatus _status = GatewayWebSocketStatus.disconnected;
@@ -23,23 +19,31 @@ class GatewayWebSocketService {
 
   Stream<dynamic>? get stream => _channel?.stream;
 
+  static Uri buildUri({
+    required String host,
+    required int port,
+    required String canPort,
+  }) {
+    return Uri(
+      scheme: 'ws',
+      host: host,
+      port: port,
+      pathSegments: ['api', 'v1', 'can', canPort, 'ws'],
+    );
+  }
+
   Future<void> connect({
-    String host = defaultHost,
-    int port = defaultPort,
-    String path = wsPath,
+    required String host,
+    required int port,
+    required String canPort,
+    required void Function(String message) onMessage,
   }) async {
     await disconnect();
 
     _status = GatewayWebSocketStatus.connecting;
 
     try {
-      final normalizedPath = path.startsWith('/') ? path : '/$path';
-      final uri = Uri(
-        scheme: 'ws',
-        host: host,
-        port: port,
-        path: normalizedPath,
-      );
+      final uri = buildUri(host: host, port: port, canPort: canPort);
 
       final channel = WebSocketChannel.connect(uri);
       _channel = channel;
@@ -53,7 +57,9 @@ class GatewayWebSocketService {
       _status = GatewayWebSocketStatus.connected;
 
       _subscription = channel.stream.listen(
-            (_) {},
+            (data) {
+              onMessage(data.toString());
+            },
         onError: (Object error, StackTrace stackTrace) {
           print('WebSocket greška na streamu: $error');
           _cleanup(nextStatus: GatewayWebSocketStatus.error);
@@ -69,6 +75,7 @@ class GatewayWebSocketService {
     } catch (e) {
       print('Greška pri spajanju na WebSocket: $e');
       _cleanup(nextStatus: GatewayWebSocketStatus.error);
+      rethrow;
     }
   }
 
