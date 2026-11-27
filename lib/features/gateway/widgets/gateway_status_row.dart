@@ -19,14 +19,24 @@ class GatewayStatusRow extends StatefulWidget {
 
 class _GatewayStatusRowState extends State<GatewayStatusRow> {
   late final GatewayHealthService _healthService;
+  late final bool _ownsHealthService;
   GatewayHealthStatus? _status;
   int _requestId = 0;
 
   @override
   void initState() {
     super.initState();
+    _ownsHealthService = widget.healthService == null;
     _healthService = widget.healthService ?? GatewayHealthService();
     _check();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsHealthService) {
+      _healthService.close();
+    }
+    super.dispose();
   }
 
   @override

@@ -3,11 +3,19 @@ import 'gateway_health_service.dart';
 
 class GatewayConnectionService {
   GatewayConnectionService({GatewayHealthService? healthService})
-      : _healthService = healthService ?? GatewayHealthService();
+    : _healthService = healthService ?? GatewayHealthService(),
+      _ownsHealthService = healthService == null;
 
   static const int defaultPort = 10000;
 
   final GatewayHealthService _healthService;
+  final bool _ownsHealthService;
+
+  void close() {
+    if (_ownsHealthService) {
+      _healthService.close();
+    }
+  }
 
   Future<void> connect(String host, String port) async {
     final portNumber = port.isEmpty ? defaultPort : int.parse(port);

@@ -32,6 +32,9 @@ class CanPortsService {
     : _apiClient = ApiClient(client: client);
 
   final ApiClient _apiClient;
+  void close() {
+    _apiClient.close();
+  }
 
   Future<List<CanPort>> fetchPorts({
     required String host,
