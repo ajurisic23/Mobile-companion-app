@@ -345,9 +345,23 @@ void main() {
     });
 
     test('closes an internally created HTTP client', () {
-      final client = ApiClient();
+      final trackingClient = TrackingClient();
 
-      expect(client.close, returnsNormally);
+      addTearDown(() {
+        if (!trackingClient.isClosed) {
+          trackingClient.close();
+        }
+      });
+
+      http.runWithClient(() {
+        final client = ApiClient();
+
+        expect(trackingClient.isClosed, isFalse);
+
+        client.close();
+
+        expect(trackingClient.isClosed, isTrue);
+      }, () => trackingClient);
     });
   });
 }

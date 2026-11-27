@@ -8,6 +8,19 @@ import 'package:mobile_companion_app/features/gateway/services/gateway_health_se
 
 import 'dart:io';
 
+class TrackingClient extends MockClient {
+  TrackingClient()
+    : super((request) async => http.Response('{"status":"ok"}', 200));
+
+  bool isClosed = false;
+
+  @override
+  void close() {
+    isClosed = true;
+    super.close();
+  }
+}
+
 void main() {
   const address = '192.168.0.100';
   const port = 10000;
@@ -308,4 +321,58 @@ void main() {
       );
     });
   });
+  group('GatewayHealthService resource management', () {
+    test('closes an internally created HTTP client', () {
+      final trackingClient = TrackingClient();
+
+      addTearDown(() {
+        if (!trackingClient.isClosed) {
+          trackingClient.close();
+        }
+      });
+
+      http.runWithClient(() {
+        final service = GatewayHealthService();
+
+        expect(trackingClient.isClosed, isFalse);
+
+        service.close();
+
+        expect(trackingClient.isClosed, isTrue);
+      }, () => trackingClient);
+    });
+
+    test('does not close an externally provided HTTP client', () async {
+      final trackingClient = TrackingClient();
+      addTearDown(trackingClient.close);
+
+      final service = GatewayHealthService(client: trackingClient);
+
+      service.close();
+
+      expect(trackingClient.isClosed, isFalse);
+
+      final response = await trackingClient.get(
+        Uri.parse('http://$address:$port/api/v1/health'),
+      );
+
+      expect(response.statusCode, 200);
+    });
+  });
+
+  test(
+    'Returns unavailable when the HTTP client throws FormatException',
+    () async {
+      final client = MockClient(
+        (request) async => throw const FormatException('Invalid response'),
+      );
+      addTearDown(client.close);
+
+      final service = GatewayHealthService(client: client);
+
+      final result = await service.checkHealth(address: address, port: port);
+
+      expect(result, GatewayHealthStatus.unavailable);
+    },
+  );
 }

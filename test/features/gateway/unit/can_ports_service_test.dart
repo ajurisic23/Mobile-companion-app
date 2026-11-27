@@ -18,16 +18,25 @@ final _portsBody = jsonEncode({
   ],
 });
 
-Future<void> _expectFailure(
-    MockClient client,
-    CanPortsFailureType type,
-    ) async {
+Future<void> _expectFailure(MockClient client, CanPortsFailureType type) async {
   final service = CanPortsService(client: client);
 
   await expectLater(
     service.fetchPorts(host: _host, port: _port),
     throwsA(isA<CanPortsException>().having((e) => e.type, 'type', type)),
   );
+}
+
+class TrackingClient extends MockClient {
+  TrackingClient() : super((request) async => http.Response(_portsBody, 200));
+
+  bool isClosed = false;
+
+  @override
+  void close() {
+    isClosed = true;
+    super.close();
+  }
 }
 
 void main() {
@@ -61,7 +70,7 @@ void main() {
   test('returns an empty list when the gateway has no ports', () async {
     final service = CanPortsService(
       client: MockClient(
-            (request) async => http.Response(jsonEncode({'ports': []}), 200),
+        (request) async => http.Response(jsonEncode({'ports': []}), 200),
       ),
     );
 
@@ -114,7 +123,7 @@ void main() {
     );
     await _expectFailure(
       MockClient(
-            (request) async => http.Response(jsonEncode({'other': 1}), 200),
+        (request) async => http.Response(jsonEncode({'other': 1}), 200),
       ),
       CanPortsFailureType.invalidResponse,
     );
@@ -124,5 +133,43 @@ void main() {
     for (final type in CanPortsFailureType.values) {
       expect(CanPortsException(type).message, isNotEmpty);
     }
+  });
+  group('CanPortsService resource management', () {
+    test('closes an internally created HTTP client', () {
+      final trackingClient = TrackingClient();
+
+      addTearDown(() {
+        if (!trackingClient.isClosed) {
+          trackingClient.close();
+        }
+      });
+
+      http.runWithClient(() {
+        final service = CanPortsService();
+
+        expect(trackingClient.isClosed, isFalse);
+
+        service.close();
+
+        expect(trackingClient.isClosed, isTrue);
+      }, () => trackingClient);
+    });
+
+    test('does not close an externally provided HTTP client', () async {
+      final trackingClient = TrackingClient();
+      addTearDown(trackingClient.close);
+
+      final service = CanPortsService(client: trackingClient);
+
+      service.close();
+
+      expect(trackingClient.isClosed, isFalse);
+
+      final response = await trackingClient.get(
+        Uri.parse('http://$_host:$_port/api/v1/can/ports'),
+      );
+
+      expect(response.statusCode, 200);
+    });
   });
 }
