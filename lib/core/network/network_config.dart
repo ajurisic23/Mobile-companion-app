@@ -1,3 +1,4 @@
+/// Defines shared default configuration for network communication.
 class NetworkConfig {
   NetworkConfig._();
 

@@ -7,7 +7,12 @@ import 'package:http/http.dart' as http;
 import 'network_config.dart';
 import 'network_exception.dart';
 
+/// Reusable HTTP client that centralizes request execution,
+/// timeouts, HTTP status validation and network error handling.
+///
+/// Request bodies and content-type headers are managed by the caller.
 class ApiClient {
+  /// Creates and owns an HTTP client unless an external client is provided.
   ApiClient({http.Client? client, this.timeout = NetworkConfig.requestTimeout})
     : _client = client ?? http.Client(),
       _ownsClient = client == null;
@@ -68,6 +73,10 @@ class ApiClient {
     return _execute(() => _client.delete(uri, headers: headers, body: body));
   }
 
+  /// Decodes the response body and converts malformed JSON into a
+  /// standardized network exception.
+  ///
+  /// Validation of the decoded data structure is the caller's responsibility.
   static dynamic decodeJson(http.Response response) {
     try {
       return jsonDecode(response.body);
@@ -76,6 +85,10 @@ class ApiClient {
     }
   }
 
+  /// Executes a request with the configured timeout and accepts only
+  /// successful HTTP status codes (2xx).
+  ///
+  /// A timeout does not guarantee cancellation of the underlying request.
   Future<http.Response> _execute(
     Future<http.Response> Function() request,
   ) async {
@@ -99,6 +112,8 @@ class ApiClient {
     }
   }
 
+  /// Releases the HTTP client only if it is owned by this instance.
+  /// Externally provided clients remain the caller's responsibility.
   void close() {
     if (_ownsClient) {
       _client.close();
