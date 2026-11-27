@@ -1,58 +1,56 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+
+import '../../../core/network/api_client.dart';
+import '../../../core/network/network_exception.dart';
 import '../models/gateway_health_model.dart';
 
-enum GatewayHealthStatus {
-  available,
-  unavailable,
-  timeout,
-  networkError,
-}
+enum GatewayHealthStatus { available, unavailable, timeout, networkError }
 
 class GatewayHealthService {
   final http.Client client;
+  final bool _ownsClient;
+
+  late final ApiClient _apiClient = ApiClient(client: client);
 
   GatewayHealthService({http.Client? client})
-      : client = client ?? http.Client();
+    : client = client ?? http.Client(),
+      _ownsClient = client == null;
+
+  void close() {
+    if (_ownsClient) {
+      client.close();
+    }
+  }
 
   Future<GatewayHealthStatus> checkHealth({
     required String address,
     required int port,
   }) async {
-    final uri = Uri(
-      scheme: 'http',
+    final uri = ApiClient.buildUri(
       host: address,
       port: port,
       path: '/api/v1/health',
     );
 
     try {
-      final response = await client.get(uri).timeout(
-        const Duration(seconds: 5),
-      );
-
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        return GatewayHealthStatus.unavailable;
-      }
-
-      final dynamic data = jsonDecode(response.body);
+      final response = await _apiClient.get(uri);
+      final data = ApiClient.decodeJson(response);
 
       if (data is Map && data['status'] == 'ok') {
         return GatewayHealthStatus.available;
       }
 
       return GatewayHealthStatus.unavailable;
-    } on TimeoutException {
-      return GatewayHealthStatus.timeout;
-    } on SocketException {
-      return GatewayHealthStatus.networkError;
-    } on http.ClientException {
-      return GatewayHealthStatus.networkError;
-    } on FormatException {
-      return GatewayHealthStatus.unavailable;
+    } on NetworkException catch (error) {
+      return switch (error.type) {
+        NetworkFailureType.timeout => GatewayHealthStatus.timeout,
+        NetworkFailureType.network => GatewayHealthStatus.networkError,
+        NetworkFailureType.badStatus => GatewayHealthStatus.unavailable,
+        NetworkFailureType.invalidResponse => GatewayHealthStatus.unavailable,
+      };
     }
   }
 
@@ -60,30 +58,39 @@ class GatewayHealthService {
     String address = '192.168.0.100',
     int port = 10000,
   }) async {
-    final uri = Uri(
-      scheme: 'http',
+    final uri = ApiClient.buildUri(
       host: address,
       port: port,
       path: '/api/v1/health',
     );
 
     try {
-      final response = await client.get(uri).timeout(
-        const Duration(seconds: 5),
-      );
+      final response = await _apiClient.get(uri);
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        return GatewayHealthModel.fromJson(jsonData);
-      } else {
-        throw Exception('Greška na serveru: ${response.statusCode}');
+      final Map<String, dynamic> jsonData = ApiClient.decodeJson(response);
+
+      return GatewayHealthModel.fromJson(jsonData);
+    } on NetworkException catch (error) {
+      switch (error.type) {
+        case NetworkFailureType.timeout:
+          throw Exception('Isteklo vrijeme spajanja na gateway (Timeout)');
+
+        case NetworkFailureType.network:
+          if (error.cause is SocketException) {
+            throw Exception('Gateway nije dostupan na mreži');
+          }
+
+          throw Exception('Mrežna greška pri spajanju na gateway');
+
+        case NetworkFailureType.badStatus:
+          throw Exception(
+            'Neuspjelo spajanje na gateway: '
+            'Exception: Greška na serveru: ${error.statusCode}',
+          );
+
+        case NetworkFailureType.invalidResponse:
+          throw Exception('Neispravan format podataka s gatewaya');
       }
-    } on TimeoutException {
-      throw Exception('Isteklo vrijeme spajanja na gateway (Timeout)');
-    } on SocketException {
-      throw Exception('Gateway nije dostupan na mreži');
-    } on http.ClientException {
-      throw Exception('Mrežna greška pri spajanju na gateway');
     } on FormatException {
       throw Exception('Neispravan format podataka s gatewaya');
     } catch (e) {
