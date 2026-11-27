@@ -10,6 +10,7 @@ import '../models/gateway_health_model.dart';
 enum GatewayHealthStatus { available, unavailable, timeout, networkError }
 
 class GatewayHealthService {
+  static const String _healthPath = '/api/v1/health';
   final http.Client client;
   final bool _ownsClient;
 
@@ -32,7 +33,7 @@ class GatewayHealthService {
     final uri = ApiClient.buildUri(
       host: address,
       port: port,
-      path: '/api/v1/health',
+      path: _healthPath,
     );
 
     try {
@@ -51,6 +52,8 @@ class GatewayHealthService {
         NetworkFailureType.badStatus => GatewayHealthStatus.unavailable,
         NetworkFailureType.invalidResponse => GatewayHealthStatus.unavailable,
       };
+    } on FormatException {
+      return GatewayHealthStatus.unavailable;
     }
   }
 
@@ -61,7 +64,7 @@ class GatewayHealthService {
     final uri = ApiClient.buildUri(
       host: address,
       port: port,
-      path: '/api/v1/health',
+      path: _healthPath,
     );
 
     try {
