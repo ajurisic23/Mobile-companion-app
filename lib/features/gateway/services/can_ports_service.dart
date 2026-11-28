@@ -1,17 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../../../core/network/api_client.dart';
+import '../../../core/network/network_exception.dart';
 import '../models/can_port.dart';
 
-enum CanPortsFailureType {
-  timeout,
-  network,
-  unavailable,
-  invalidResponse,
-}
+enum CanPortsFailureType { timeout, network, unavailable, invalidResponse }
 
 class CanPortsException implements Exception {
   const CanPortsException(this.type);
@@ -19,14 +14,13 @@ class CanPortsException implements Exception {
   final CanPortsFailureType type;
 
   String get message => switch (type) {
-    CanPortsFailureType.timeout =>
-    'The gateway did not respond in time. Check the connection and try again.',
+    CanPortsFailureType.timeout => 'The gateway did not respond in time. Check the connection and try again.',
     CanPortsFailureType.network =>
-    'Could not reach the gateway. Check that you are on the same network.',
+      'Could not reach the gateway. Check that you are on the same network.',
     CanPortsFailureType.unavailable =>
-    'The gateway could not provide the CAN ports.',
+      'The gateway could not provide the CAN ports.',
     CanPortsFailureType.invalidResponse =>
-    'The gateway returned an unexpected response.',
+      'The gateway returned an unexpected response.',
   };
 
   @override
@@ -34,38 +28,37 @@ class CanPortsException implements Exception {
 }
 
 class CanPortsService {
-  CanPortsService({http.Client? client}) : _client = client ?? http.Client();
+  CanPortsService({http.Client? client})
+    : _apiClient = ApiClient(client: client);
 
-  final http.Client _client;
+  final ApiClient _apiClient;
+  void close() {
+    _apiClient.close();
+  }
 
   Future<List<CanPort>> fetchPorts({
     required String host,
     required int port,
   }) async {
-    final uri = Uri(
-      scheme: 'http',
+    final uri = ApiClient.buildUri(
       host: host,
       port: port,
       path: '/api/v1/can/ports',
     );
 
-    final http.Response response;
     try {
-      response = await _client.get(uri).timeout(const Duration(seconds: 5));
-    } on TimeoutException {
-      throw const CanPortsException(CanPortsFailureType.timeout);
-    } on SocketException {
-      throw const CanPortsException(CanPortsFailureType.network);
-    } on http.ClientException {
-      throw const CanPortsException(CanPortsFailureType.network);
-    }
+      final response = await _apiClient.get(uri);
+      final data = ApiClient.decodeJson(response);
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw const CanPortsException(CanPortsFailureType.unavailable);
-    }
-
-    try {
-      return CanPort.listFromJson(jsonDecode(response.body));
+      return CanPort.listFromJson(data);
+    } on NetworkException catch (error) {
+      throw CanPortsException(switch (error.type) {
+        NetworkFailureType.timeout => CanPortsFailureType.timeout,
+        NetworkFailureType.network => CanPortsFailureType.network,
+        NetworkFailureType.badStatus => CanPortsFailureType.unavailable,
+        NetworkFailureType.invalidResponse =>
+          CanPortsFailureType.invalidResponse,
+      });
     } on FormatException {
       throw const CanPortsException(CanPortsFailureType.invalidResponse);
     }

@@ -26,6 +26,7 @@ class CanPortSelector extends StatefulWidget {
 
 class _CanPortSelectorState extends State<CanPortSelector> {
   late final CanPortsService _service;
+  late final bool _ownsService;
   List<CanPort>? _ports;
   String? _errorMessage;
   bool _isLoading = false;
@@ -34,11 +35,21 @@ class _CanPortSelectorState extends State<CanPortSelector> {
   @override
   void initState() {
     super.initState();
+    _ownsService = widget.service == null;
     _service = widget.service ?? CanPortsService();
+
     if (widget.gateway != null) {
       _isLoading = true;
       _fetch();
     }
+  }
+
+  @override
+  void dispose() {
+    if (_ownsService) {
+      _service.close();
+    }
+    super.dispose();
   }
 
   @override
@@ -47,7 +58,8 @@ class _CanPortSelectorState extends State<CanPortSelector> {
 
     final previous = oldWidget.gateway;
     final current = widget.gateway;
-    final sameGateway = previous != null &&
+    final sameGateway =
+        previous != null &&
         current != null &&
         previous.hasSameAddressAs(current);
     if (sameGateway || (previous == null && current == null)) return;

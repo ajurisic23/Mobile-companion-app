@@ -24,13 +24,23 @@ class GatewayScreen extends StatefulWidget {
 
 class _GatewayScreenState extends State<GatewayScreen> {
   late final GatewayConnectionService _connectionService;
+  late final bool _ownsConnectionService;
   List<GatewayInfo> _savedGateways = const [];
 
   @override
   void initState() {
     super.initState();
+    _ownsConnectionService = widget.connectionService == null;
     _connectionService = widget.connectionService ?? GatewayConnectionService();
     _loadSavedGateways();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsConnectionService) {
+      _connectionService.close();
+    }
+    super.dispose();
   }
 
   Future<void> _loadSavedGateways() async {
@@ -60,13 +70,14 @@ class _GatewayScreenState extends State<GatewayScreen> {
       orElse: () => gateway,
     );
     activeGateway.selectGateway(saved);
+    if (!mounted) return;
   }
 
   Future<void> _connectSaved(GatewayInfo gateway) async {
     final activeGateway = context.read<ActiveGatewayController>();
 
     await _connectionService.connect(gateway.host, gateway.port.toString());
-
+    if (!mounted) return;
     activeGateway.selectGateway(gateway);
   }
 

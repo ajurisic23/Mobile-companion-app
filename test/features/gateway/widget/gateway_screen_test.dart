@@ -6,10 +6,12 @@ import 'package:mobile_companion_app/features/gateway/services/gateway_connectio
 import 'package:mobile_companion_app/features/gateway/services/gateway_repository.dart';
 import 'package:mobile_companion_app/features/gateway/state/active_gateway_controller.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
 class _FakeRepository implements GatewayRepository {
   _FakeRepository([List<GatewayInfo> initial = const []])
-      : gateways = [...initial];
+    : gateways = [...initial];
 
   final List<GatewayInfo> gateways;
 
@@ -40,11 +42,32 @@ class _FakeConnectionService extends GatewayConnectionService {
   final Object? error;
   final List<String> calls = [];
 
+  bool isClosed = false;
+
   @override
   Future<void> connect(String host, String port) async {
     calls.add('$host:$port');
     final failure = error;
     if (failure != null) throw failure;
+  }
+
+  @override
+  void close() {
+    isClosed = true;
+    super.close();
+  }
+}
+
+class _TrackingClient extends MockClient {
+  _TrackingClient()
+    : super((request) async => http.Response('{"status":"ok"}', 200));
+
+  bool isClosed = false;
+
+  @override
+  void close() {
+    isClosed = true;
+    super.close();
   }
 }
 
@@ -55,11 +78,11 @@ const _saved = GatewayInfo(
 );
 
 Future<void> _pumpScreen(
-    WidgetTester tester, {
-      required GatewayRepository repository,
-      required GatewayConnectionService service,
-      ActiveGatewayController? activeGateway,
-    }) async {
+  WidgetTester tester, {
+  required GatewayRepository repository,
+  GatewayConnectionService? service,
+  ActiveGatewayController? activeGateway,
+}) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -81,10 +104,10 @@ Future<void> _pumpScreen(
 }
 
 Future<void> _connectTo(
-    WidgetTester tester, {
-      required String host,
-      String port = '',
-    }) async {
+  WidgetTester tester, {
+  required String host,
+  String port = '',
+}) async {
   await tester.enterText(find.byType(TextFormField).at(0), host);
   await tester.enterText(find.byType(TextFormField).at(1), port);
   await tester.tap(find.text('Connect'));
@@ -104,55 +127,58 @@ void main() {
     expect(find.text('192.168.0.100:10000'), findsOneWidget);
   });
 
-  testWidgets('hides the saved gateways section when nothing is saved',
-          (tester) async {
-        await _pumpScreen(
-          tester,
-          repository: _FakeRepository(),
-          service: _FakeConnectionService(),
-        );
+  testWidgets('hides the saved gateways section when nothing is saved', (
+    tester,
+  ) async {
+    await _pumpScreen(
+      tester,
+      repository: _FakeRepository(),
+      service: _FakeConnectionService(),
+    );
 
-        expect(find.text('Saved gateways'), findsNothing);
-      });
+    expect(find.text('Saved gateways'), findsNothing);
+  });
 
-  testWidgets('saves a new gateway with the default port after connecting',
-          (tester) async {
-        final repository = _FakeRepository();
-        final service = _FakeConnectionService();
+  testWidgets('saves a new gateway with the default port after connecting', (
+    tester,
+  ) async {
+    final repository = _FakeRepository();
+    final service = _FakeConnectionService();
 
-        await _pumpScreen(tester, repository: repository, service: service);
-        await _connectTo(tester, host: '192.168.0.100');
+    await _pumpScreen(tester, repository: repository, service: service);
+    await _connectTo(tester, host: '192.168.0.100');
 
-        expect(service.calls, ['192.168.0.100:']);
-        expect(repository.gateways, [
-          const GatewayInfo(
-            name: '192.168.0.100:10000',
-            host: '192.168.0.100',
-            port: 10000,
-          ),
-        ]);
-        expect(find.text('Saved gateways'), findsOneWidget);
-      });
+    expect(service.calls, ['192.168.0.100:']);
+    expect(repository.gateways, [
+      const GatewayInfo(
+        name: '192.168.0.100:10000',
+        host: '192.168.0.100',
+        port: 10000,
+      ),
+    ]);
+    expect(find.text('Saved gateways'), findsOneWidget);
+  });
 
-  testWidgets('saves the gateway with the port that was entered',
-          (tester) async {
-        final repository = _FakeRepository();
+  testWidgets('saves the gateway with the port that was entered', (
+    tester,
+  ) async {
+    final repository = _FakeRepository();
 
-        await _pumpScreen(
-          tester,
-          repository: repository,
-          service: _FakeConnectionService(),
-        );
-        await _connectTo(tester, host: '192.168.0.101', port: '8080');
+    await _pumpScreen(
+      tester,
+      repository: repository,
+      service: _FakeConnectionService(),
+    );
+    await _connectTo(tester, host: '192.168.0.101', port: '8080');
 
-        expect(repository.gateways, [
-          const GatewayInfo(
-            name: '192.168.0.101:8080',
-            host: '192.168.0.101',
-            port: 8080,
-          ),
-        ]);
-      });
+    expect(repository.gateways, [
+      const GatewayInfo(
+        name: '192.168.0.101:8080',
+        host: '192.168.0.101',
+        port: 8080,
+      ),
+    ]);
+  });
 
   testWidgets('does not save a gateway when connecting fails', (tester) async {
     final repository = _FakeRepository();
@@ -168,50 +194,54 @@ void main() {
     expect(find.text('Saved gateways'), findsNothing);
   });
 
-  testWidgets('does not duplicate or rename an already saved gateway',
-          (tester) async {
-        final repository = _FakeRepository([_saved]);
+  testWidgets('does not duplicate or rename an already saved gateway', (
+    tester,
+  ) async {
+    final repository = _FakeRepository([_saved]);
 
-        await _pumpScreen(
-          tester,
-          repository: repository,
-          service: _FakeConnectionService(),
-        );
-        await _connectTo(tester, host: '192.168.0.100');
+    await _pumpScreen(
+      tester,
+      repository: repository,
+      service: _FakeConnectionService(),
+    );
+    await _connectTo(tester, host: '192.168.0.100');
 
-        expect(repository.gateways, [_saved]);
-      });
+    expect(repository.gateways, [_saved]);
+  });
 
-  testWidgets('connecting to a saved gateway uses its address and port',
-          (tester) async {
-        final repository = _FakeRepository([_saved]);
-        final service = _FakeConnectionService();
+  testWidgets('connecting to a saved gateway uses its address and port', (
+    tester,
+  ) async {
+    final repository = _FakeRepository([_saved]);
+    final service = _FakeConnectionService();
 
-        await _pumpScreen(tester, repository: repository, service: service);
-        await tester.tap(find.text('Machine 1'));
-        await tester.pumpAndSettle();
+    await _pumpScreen(tester, repository: repository, service: service);
+    await tester.tap(find.text('Machine 1'));
+    await tester.pumpAndSettle();
 
-        expect(service.calls, ['192.168.0.100:10000']);
-        expect(repository.gateways, [_saved]);
-      });
+    expect(service.calls, ['192.168.0.100:10000']);
+    expect(repository.gateways, [_saved]);
+  });
 
-  testWidgets('deleting a gateway removes it from the repository and the list',
-          (tester) async {
-        final repository = _FakeRepository([_saved]);
+  testWidgets(
+    'deleting a gateway removes it from the repository and the list',
+    (tester) async {
+      final repository = _FakeRepository([_saved]);
 
-        await _pumpScreen(
-          tester,
-          repository: repository,
-          service: _FakeConnectionService(),
-        );
-        await tester.tap(find.byTooltip('Delete'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Delete'));
-        await tester.pumpAndSettle();
+      await _pumpScreen(
+        tester,
+        repository: repository,
+        service: _FakeConnectionService(),
+      );
+      await tester.tap(find.byTooltip('Delete'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
 
-        expect(repository.gateways, isEmpty);
-        expect(find.text('Saved gateways'), findsNothing);
-      });
+      expect(repository.gateways, isEmpty);
+      expect(find.text('Saved gateways'), findsNothing);
+    },
+  );
 
   testWidgets('cancelling the confirmation keeps the gateway', (tester) async {
     final repository = _FakeRepository([_saved]);
@@ -265,34 +295,78 @@ void main() {
     expect(activeGateway.gateway, _saved);
   });
 
-  testWidgets('sets the active gateway when connecting to a saved one',
-          (tester) async {
-        final activeGateway = ActiveGatewayController();
+  testWidgets('sets the active gateway when connecting to a saved one', (
+    tester,
+  ) async {
+    final activeGateway = ActiveGatewayController();
 
-        await _pumpScreen(
-          tester,
-          repository: _FakeRepository([_saved]),
-          service: _FakeConnectionService(),
-          activeGateway: activeGateway,
-        );
-        await tester.tap(find.text('Machine 1'));
-        await tester.pumpAndSettle();
+    await _pumpScreen(
+      tester,
+      repository: _FakeRepository([_saved]),
+      service: _FakeConnectionService(),
+      activeGateway: activeGateway,
+    );
+    await tester.tap(find.text('Machine 1'));
+    await tester.pumpAndSettle();
 
-        expect(activeGateway.gateway, _saved);
+    expect(activeGateway.gateway, _saved);
+  });
+
+  testWidgets('does not set the active gateway when connecting fails', (
+    tester,
+  ) async {
+    final activeGateway = ActiveGatewayController();
+
+    await _pumpScreen(
+      tester,
+      repository: _FakeRepository(),
+      service: _FakeConnectionService(error: Exception('boom')),
+      activeGateway: activeGateway,
+    );
+    await _connectTo(tester, host: '192.168.0.200');
+
+    expect(activeGateway.gateway, isNull);
+  });
+  group('GatewayScreen resource management', () {
+    testWidgets('closes its own connection service when disposed', (
+      tester,
+    ) async {
+      final trackingClient = _TrackingClient();
+
+      addTearDown(() {
+        if (!trackingClient.isClosed) {
+          trackingClient.close();
+        }
       });
 
-  testWidgets('does not set the active gateway when connecting fails',
-          (tester) async {
-        final activeGateway = ActiveGatewayController();
+      await http.runWithClient(() async {
+        await _pumpScreen(tester, repository: _FakeRepository());
 
-        await _pumpScreen(
-          tester,
-          repository: _FakeRepository(),
-          service: _FakeConnectionService(error: Exception('boom')),
-          activeGateway: activeGateway,
-        );
-        await _connectTo(tester, host: '192.168.0.200');
+        expect(trackingClient.isClosed, isFalse);
 
-        expect(activeGateway.gateway, isNull);
-      });
+        await tester.pumpWidget(const SizedBox.shrink());
+
+        expect(trackingClient.isClosed, isTrue);
+      }, () => trackingClient);
+    });
+
+    testWidgets('does not close an externally provided connection service', (
+      tester,
+    ) async {
+      final service = _FakeConnectionService();
+      addTearDown(service.close);
+
+      await _pumpScreen(
+        tester,
+        repository: _FakeRepository(),
+        service: service,
+      );
+
+      expect(service.isClosed, isFalse);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+
+      expect(service.isClosed, isFalse);
+    });
+  });
 }

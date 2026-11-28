@@ -6,6 +6,8 @@ import 'package:mobile_companion_app/features/gateway/models/can_port.dart';
 import 'package:mobile_companion_app/features/gateway/models/gateway_info.dart';
 import 'package:mobile_companion_app/features/gateway/services/can_ports_service.dart';
 import 'package:mobile_companion_app/features/gateway/widgets/can_port_selector.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
 const _gateway = GatewayInfo(
   name: 'Address 1',
@@ -28,19 +30,37 @@ class _FakeCanPortsService extends CanPortsService {
   final Future<List<CanPort>> Function(String host, int port) handler;
   final List<String> calls = [];
 
+  bool isClosed = false;
+
   @override
-  Future<List<CanPort>> fetchPorts({
-    required String host,
-    required int port,
-  }) {
+  Future<List<CanPort>> fetchPorts({required String host, required int port}) {
     calls.add('$host:$port');
     return handler(host, port);
+  }
+
+  @override
+  void close() {
+    isClosed = true;
+    super.close();
+  }
+}
+
+class _TrackingClient extends MockClient {
+  _TrackingClient()
+    : super((request) async => http.Response('{"ports":[]}', 200));
+
+  bool isClosed = false;
+
+  @override
+  void close() {
+    isClosed = true;
+    super.close();
   }
 }
 
 Widget _wrap({
   required GatewayInfo? gateway,
-  required CanPortsService service,
+  CanPortsService? service,
   CanPort? selectedPort,
   ValueChanged<CanPort>? onSelected,
 }) {
@@ -57,32 +77,36 @@ Widget _wrap({
 }
 
 void main() {
-  testWidgets('asks the user to connect when there is no gateway',
-          (tester) async {
-        final service = _FakeCanPortsService((host, port) async => [_can0]);
+  testWidgets('asks the user to connect when there is no gateway', (
+    tester,
+  ) async {
+    final service = _FakeCanPortsService((host, port) async => [_can0]);
 
-        await tester.pumpWidget(_wrap(gateway: null, service: service));
+    await tester.pumpWidget(_wrap(gateway: null, service: service));
 
-        expect(find.text('Connect to a gateway to see its CAN ports.'),
-            findsOneWidget);
-        expect(service.calls, isEmpty);
-      });
+    expect(
+      find.text('Connect to a gateway to see its CAN ports.'),
+      findsOneWidget,
+    );
+    expect(service.calls, isEmpty);
+  });
 
-  testWidgets('shows a loading indicator while the ports are loading',
-          (tester) async {
-        final completer = Completer<List<CanPort>>();
-        final service = _FakeCanPortsService((host, port) => completer.future);
+  testWidgets('shows a loading indicator while the ports are loading', (
+    tester,
+  ) async {
+    final completer = Completer<List<CanPort>>();
+    final service = _FakeCanPortsService((host, port) => completer.future);
 
-        await tester.pumpWidget(_wrap(gateway: _gateway, service: service));
+    await tester.pumpWidget(_wrap(gateway: _gateway, service: service));
 
-        expect(find.text('Loading CAN ports...'), findsOneWidget);
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('Loading CAN ports...'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-        completer.complete([_can0, _can1]);
-        await tester.pumpAndSettle();
+    completer.complete([_can0, _can1]);
+    await tester.pumpAndSettle();
 
-        expect(find.text('Loading CAN ports...'), findsNothing);
-      });
+    expect(find.text('Loading CAN ports...'), findsNothing);
+  });
 
   testWidgets('requests the ports of the gateway', (tester) async {
     final service = _FakeCanPortsService((host, port) async => [_can0]);
@@ -93,27 +117,30 @@ void main() {
     expect(service.calls, ['192.168.0.100:10000']);
   });
 
-  testWidgets('shows the number of ports and a prompt to select one',
-          (tester) async {
-        final service = _FakeCanPortsService((host, port) async => [_can0, _can1]);
+  testWidgets('shows the number of ports and a prompt to select one', (
+    tester,
+  ) async {
+    final service = _FakeCanPortsService((host, port) async => [_can0, _can1]);
 
-        await tester.pumpWidget(_wrap(gateway: _gateway, service: service));
-        await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(gateway: _gateway, service: service));
+    await tester.pumpAndSettle();
 
-        expect(find.text('CAN port'), findsOneWidget);
-        expect(find.text('2 ports'), findsOneWidget);
-        expect(find.text('Select a CAN port'), findsOneWidget);
-      });
+    expect(find.text('CAN port'), findsOneWidget);
+    expect(find.text('2 ports'), findsOneWidget);
+    expect(find.text('Select a CAN port'), findsOneWidget);
+  });
 
   testWidgets('selecting a port reports it', (tester) async {
     CanPort? selected;
     final service = _FakeCanPortsService((host, port) async => [_can0, _can1]);
 
-    await tester.pumpWidget(_wrap(
-      gateway: _gateway,
-      service: service,
-      onSelected: (port) => selected = port,
-    ));
+    await tester.pumpWidget(
+      _wrap(
+        gateway: _gateway,
+        service: service,
+        onSelected: (port) => selected = port,
+      ),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.byType(DropdownButton<CanPort>));
@@ -127,52 +154,55 @@ void main() {
   testWidgets('shows the selected port', (tester) async {
     final service = _FakeCanPortsService((host, port) async => [_can0, _can1]);
 
-    await tester.pumpWidget(_wrap(
-      gateway: _gateway,
-      service: service,
-      selectedPort: _can1,
-    ));
+    await tester.pumpWidget(
+      _wrap(gateway: _gateway, service: service, selectedPort: _can1),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('can1 (CAN2)'), findsWidgets);
     expect(find.text('Select a CAN port'), findsNothing);
   });
 
-  testWidgets('a disabled port is shown but cannot be selected',
-          (tester) async {
-        CanPort? selected;
-        const disabled = CanPort(name: 'can1', halName: 'CAN2', enabled: false);
-        final service =
-        _FakeCanPortsService((host, port) async => [_can0, disabled]);
+  testWidgets('a disabled port is shown but cannot be selected', (
+    tester,
+  ) async {
+    CanPort? selected;
+    const disabled = CanPort(name: 'can1', halName: 'CAN2', enabled: false);
+    final service = _FakeCanPortsService(
+      (host, port) async => [_can0, disabled],
+    );
 
-        await tester.pumpWidget(_wrap(
-          gateway: _gateway,
-          service: service,
-          onSelected: (port) => selected = port,
-        ));
-        await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _wrap(
+        gateway: _gateway,
+        service: service,
+        onSelected: (port) => selected = port,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-        await tester.tap(find.byType(DropdownButton<CanPort>));
-        await tester.pumpAndSettle();
-        expect(find.text('can1 (CAN2) (disabled)'), findsOneWidget);
+    await tester.tap(find.byType(DropdownButton<CanPort>));
+    await tester.pumpAndSettle();
+    expect(find.text('can1 (CAN2) (disabled)'), findsOneWidget);
 
-        await tester.tap(find.text('can1 (CAN2) (disabled)'), warnIfMissed: false);
-        await tester.pumpAndSettle();
+    await tester.tap(find.text('can1 (CAN2) (disabled)'), warnIfMissed: false);
+    await tester.pumpAndSettle();
 
-        expect(selected, isNull);
-      });
+    expect(selected, isNull);
+  });
 
-  testWidgets('shows a message when the gateway has no ports',
-          (tester) async {
-        final service = _FakeCanPortsService((host, port) async => []);
+  testWidgets('shows a message when the gateway has no ports', (tester) async {
+    final service = _FakeCanPortsService((host, port) async => []);
 
-        await tester.pumpWidget(_wrap(gateway: _gateway, service: service));
-        await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(gateway: _gateway, service: service));
+    await tester.pumpAndSettle();
 
-        expect(find.text('This gateway has no CAN ports available.'),
-            findsOneWidget);
-        expect(find.text('Try again'), findsOneWidget);
-      });
+    expect(
+      find.text('This gateway has no CAN ports available.'),
+      findsOneWidget,
+    );
+    expect(find.text('Try again'), findsOneWidget);
+  });
 
   testWidgets('shows the failure message and can try again', (tester) async {
     var attempts = 0;
@@ -198,47 +228,46 @@ void main() {
     expect(find.text('1 port'), findsOneWidget);
   });
 
-  testWidgets('shows a readable message for unexpected errors',
-          (tester) async {
-        final service = _FakeCanPortsService((host, port) async => throw 'boom');
+  testWidgets('shows a readable message for unexpected errors', (tester) async {
+    final service = _FakeCanPortsService((host, port) async => throw 'boom');
 
-        await tester.pumpWidget(_wrap(gateway: _gateway, service: service));
-        await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(gateway: _gateway, service: service));
+    await tester.pumpAndSettle();
 
-        expect(find.text('Could not load the CAN ports.'), findsOneWidget);
-      });
+    expect(find.text('Could not load the CAN ports.'), findsOneWidget);
+  });
 
-  testWidgets('loads the ports again when the gateway changes',
-          (tester) async {
-        final service = _FakeCanPortsService((host, port) async => [_can0]);
+  testWidgets('loads the ports again when the gateway changes', (tester) async {
+    final service = _FakeCanPortsService((host, port) async => [_can0]);
 
-        await tester.pumpWidget(_wrap(gateway: _gateway, service: service));
-        await tester.pumpAndSettle();
-        await tester.pumpWidget(_wrap(gateway: _otherGateway, service: service));
-        await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(gateway: _gateway, service: service));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(gateway: _otherGateway, service: service));
+    await tester.pumpAndSettle();
 
-        expect(service.calls, ['192.168.0.100:10000', '192.168.0.101:8080']);
-      });
+    expect(service.calls, ['192.168.0.100:10000', '192.168.0.101:8080']);
+  });
 
-  testWidgets('ignores a late response of the previous gateway',
-          (tester) async {
-        final first = Completer<List<CanPort>>();
-        final second = Completer<List<CanPort>>();
-        final service = _FakeCanPortsService(
-              (host, port) => host == '192.168.0.100' ? first.future : second.future,
-        );
+  testWidgets('ignores a late response of the previous gateway', (
+    tester,
+  ) async {
+    final first = Completer<List<CanPort>>();
+    final second = Completer<List<CanPort>>();
+    final service = _FakeCanPortsService(
+      (host, port) => host == '192.168.0.100' ? first.future : second.future,
+    );
 
-        await tester.pumpWidget(_wrap(gateway: _gateway, service: service));
-        await tester.pumpWidget(_wrap(gateway: _otherGateway, service: service));
+    await tester.pumpWidget(_wrap(gateway: _gateway, service: service));
+    await tester.pumpWidget(_wrap(gateway: _otherGateway, service: service));
 
-        second.complete([_can0]);
-        await tester.pumpAndSettle();
-        first.complete([_can0, _can1]);
-        await tester.pumpAndSettle();
+    second.complete([_can0]);
+    await tester.pumpAndSettle();
+    first.complete([_can0, _can1]);
+    await tester.pumpAndSettle();
 
-        expect(find.text('1 port'), findsOneWidget);
-        expect(find.text('2 ports'), findsNothing);
-      });
+    expect(find.text('1 port'), findsOneWidget);
+    expect(find.text('2 ports'), findsNothing);
+  });
 
   testWidgets('clears the ports when the gateway is removed', (tester) async {
     final service = _FakeCanPortsService((host, port) async => [_can0]);
@@ -249,7 +278,45 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('1 port'), findsNothing);
-    expect(find.text('Connect to a gateway to see its CAN ports.'),
-        findsOneWidget);
+    expect(
+      find.text('Connect to a gateway to see its CAN ports.'),
+      findsOneWidget,
+    );
+  });
+  group('CanPortSelector resource management', () {
+    testWidgets('closes its own service when disposed', (tester) async {
+      final trackingClient = _TrackingClient();
+
+      addTearDown(() {
+        if (!trackingClient.isClosed) {
+          trackingClient.close();
+        }
+      });
+
+      await http.runWithClient(() async {
+        await tester.pumpWidget(_wrap(gateway: null));
+
+        expect(trackingClient.isClosed, isFalse);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+
+        expect(trackingClient.isClosed, isTrue);
+      }, () => trackingClient);
+    });
+
+    testWidgets('does not close an externally provided service', (
+      tester,
+    ) async {
+      final service = _FakeCanPortsService((host, port) async => [_can0]);
+      addTearDown(service.close);
+
+      await tester.pumpWidget(_wrap(gateway: null, service: service));
+
+      expect(service.isClosed, isFalse);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+
+      expect(service.isClosed, isFalse);
+    });
   });
 }
